@@ -1,5 +1,5 @@
 # Ett kandidatarbetesprojekt
-DocBot (temporary name)
+Atticus
 
 ## running instructions
 
@@ -17,6 +17,22 @@ To run in production mode (doesn't need to build if using express???)
 ```sh
 npm run start
 ```
+
+## Code style
+
+All pull requests that don't follow the code style will be rejected!
+
+To format all files run:
+```sh
+make format-run
+```
+
+To verify whether all files are formatted (for reviewers) run:
+```sh
+make format-check
+```
+
+There are [editor packages](https://prettier.io/docs/en/editors.html) and [git integraton](https://prettier.io/docs/en/precommit.html) that could be used to automate this process. The git one is particularly nice as it automatically runs on the files that are about to get committed.
 
 ## directory structure
 
