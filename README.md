@@ -32,7 +32,18 @@ To verify whether all files are formatted (for reviewers) run:
 make format-check
 ```
 
-There are [editor packages](https://prettier.io/docs/en/editors.html) and [git integraton](https://prettier.io/docs/en/precommit.html) that could be used to automate this process. The git one is particularly nice as it automatically runs on the files that are about to get committed.
+There are [editor packages](https://prettier.io/docs/en/editors.html) and [git integraton](https://prettier.io/docs/en/precommit.html) that could be used to automate this process.
+
+This can be used to format all staged files and do a commit:
+```sh
+make commit
+make commit m:='commit message'
+```
+
+This can be used to make git run `make format-staged` automatically on each `git commit`:
+```sh
+make install-pre-commit
+```
 
 ## directory structure
 
