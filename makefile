@@ -22,8 +22,8 @@ format-check:
 	@$(PRETTY) --check $(SRCFILES); exit 0
 
 # Format all files
-.PHONY: format-run
-format-run:
+.PHONY: format-all
+format-all:
 	@$(PRETTY) --write $(SRCFILES)
 
 # Format only staged files
