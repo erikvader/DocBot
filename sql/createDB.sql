@@ -7,18 +7,18 @@ CREATE TABLE IF NOT EXISTS Entity (
 	name varchar(64) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS Entity_value (
+CREATE TABLE IF NOT EXISTS EntityValue (
 	id int UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	name varchar(32) NOT NULL,
 	entity_id int UNSIGNED NOT NULL,
 	FOREIGN KEY (entity_id) REFERENCES Entity (id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS Entity_synonym (
+CREATE TABLE IF NOT EXISTS EntitySynonym (
 	id int UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	value varchar(32) NOT NULL,
 	entity_value_id int UNSIGNED NOT NULL,
-	FOREIGN KEY (entity_value_id) REFERENCES Entity_value (id) ON DELETE CASCADE
+	FOREIGN KEY (entity_value_id) REFERENCES EntityValue (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Node (
@@ -27,30 +27,30 @@ CREATE TABLE IF NOT EXISTS Node (
 	last_changed datetime DEFAULT current_timestamp ON UPDATE current_timestamp,
 	sibling_order int NOT NULL DEFAULT 0,
 	catch_node_id varchar(64),
-	watson_id varchar(64) NOT NULL,
+	external_id varchar(64) NOT NULL,
 	root_id int UNSIGNED,
 	FOREIGN KEY (root_id) REFERENCES Node (id) ON DELETE CASCADE
 );
 
 
-CREATE TABLE IF NOT EXISTS Question_wording (
+CREATE TABLE IF NOT EXISTS QuestionWording (
 	id int UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	value text NOT NULL,
 	node_id int UNSIGNED NOT NULL,
 	FOREIGN KEY (node_id) REFERENCES Node (id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS Condition_entity_value (
+CREATE TABLE IF NOT EXISTS ConditionEntityValue (
 	entity_value_id int UNSIGNED NOT NULL,
 	node_id int UNSIGNED NOT NULL,
 	terminates boolean NOT NULL DEFAULT false,
 	save boolean NOT NULL DEFAULT false,
-	FOREIGN KEY (entity_value_id) REFERENCES Entity_value (id) ON DELETE CASCADE,
+	FOREIGN KEY (entity_value_id) REFERENCES EntityValue (id) ON DELETE CASCADE,
 	FOREIGN KEY (node_id) REFERENCES Node (id) ON DELETE CASCADE,
 	PRIMARY KEY(entity_value_id, node_id)	
 );
 
-CREATE TABLE IF NOT EXISTS Node_order (
+CREATE TABLE IF NOT EXISTS NodeOrder (
 	previous_id int UNSIGNED NOT NULL,
 	next_id int UNSIGNED NOT NULL,
 	value varchar(64),
@@ -73,11 +73,11 @@ CREATE TABLE IF NOT EXISTS Answer (
 	root_node_id int UNSIGNED NOT NULL,
 	value text NOT NULL,
 	last_changed datetime DEFAULT current_timestamp ON UPDATE current_timestamp,
-	FOREIGN KEY (entity_value_id) REFERENCES Entity_value (id) ON DELETE CASCADE,
+	FOREIGN KEY (entity_value_id) REFERENCES EntityValue (id) ON DELETE CASCADE,
 	FOREIGN KEY (user_id) REFERENCES User (id) ON DELETE CASCADE,
 	FOREIGN KEY (node_id) REFERENCES Node (id) ON DELETE CASCADE,
 	FOREIGN KEY (root_node_id) REFERENCES Node (id) ON DELETE CASCADE,
-	PRIMARY KEY (entity_value_id, user_id)
+	PRIMARY KEY (node_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS Intent (
@@ -85,14 +85,14 @@ CREATE TABLE IF NOT EXISTS Intent (
 	name varchar(64) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS Intent_example (
+CREATE TABLE IF NOT EXISTS IntentExample (
 	id int UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	intent_id int UNSIGNED NOT NULL,
 	value varchar(128) NOT NULL, 
 	FOREIGN KEY (intent_id) REFERENCES Intent (id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS Condition_intent (
+CREATE TABLE IF NOT EXISTS ConditionIntent (
 	node_id int UNSIGNED NOT NULL,
 	intent_id int UNSIGNED NOT NULL,
 	FOREIGN KEY (node_id) REFERENCES Node (id) ON DELETE CASCADE,
