@@ -1,6 +1,7 @@
 
 SRCDIRS := pages components api
-SRCFILES := server.js $(shell find $(SRCDIRS) -regex ^.*\.jsx?$)
+#NOTE: MACs didn't like -regex :(
+SRCFILES := server.js $(shell find $(SRCDIRS) -name '*.jsx' -o -name '*.js')
 
 CONFIG := ./.prettierrc
 PRETTY := npx prettier --config $(CONFIG)

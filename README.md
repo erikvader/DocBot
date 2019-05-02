@@ -24,7 +24,7 @@ All pull requests that don't follow the code style will be rejected!
 
 To format all files run:
 ```sh
-make format-run
+make format-all
 ```
 
 To verify whether all files are formatted (for reviewers) run:
