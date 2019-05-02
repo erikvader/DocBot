@@ -8,7 +8,7 @@ export default function Index() {
         <Menu />
       </div>
       <div>
-        <a> this is filled page </a>
+        <ScrollMenu />
       </div>
     </div>
   )
