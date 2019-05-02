@@ -1,20 +1,17 @@
-import Link from 'next/link'
-import Menu from '../components/Layout'
-import ScrollMenu from '../components/scrollMenu'
-
+import Link from "next/link";
+import Menu from "../components/Layout";
+import ScrollMenu from "../components/scrollMenu";
 
 export default function Index() {
-  return (
-    <div>
+    return (
+        <div>
+            <div>
+                <Menu />
+            </div>
 
-
-      <div>
-        <Menu />
-      </div>
-
-      <div>
-        <ScrollMenu />
-      </div>
-    </div>
-  )
+            <div>
+                <ScrollMenu />
+            </div>
+        </div>
+    );
 }
