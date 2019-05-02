@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import Menu from '../components/Layout'
-import Scroll from '../components/Layout'
 import ScrollMenu from '../components/scrollMenu'
 
 

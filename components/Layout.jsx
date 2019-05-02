@@ -12,30 +12,9 @@ const menuStyle = {
   float: 'left',
   width: '25%',
   padding: '1%',
-  //height: '200 px',
   border: 'solid',
 }
 
-/* styling for ScrollMenu*/
-const scrollStyle = {
-  overflow: 'scroll',
-  float: 'right',
-  width: '69%',
-  padding: '1%',
-  height: '100vh',
-  border: 'solid',
-
-}
-
-//function for generating the menu
-
-const Scroll = () => {
-  <div style={scrollStyle} >
-
-
-  </div>
-
-};
 
 
 const Menu = () => (
