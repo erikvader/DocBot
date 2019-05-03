@@ -17,7 +17,7 @@ const menuStyle = {
 const Menu = () => (
     <div style={menuStyle}>
         <ul>
-            <Link href="/">
+            <Link href="/admin">
                 <a style={linkStyle}>Startsida</a>
             </Link>
         </ul>
@@ -32,7 +32,7 @@ const Menu = () => (
             </Link>
         </ul>
         <ul>
-            <Link href="/condition manager">
+            <Link href="/conditionManager">
                 <a style={linkStyle}>Villkorsskapare</a>
             </Link>
         </ul>

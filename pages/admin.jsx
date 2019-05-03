@@ -8,6 +8,7 @@ export default function admin() {
             <div>
                 <Menu />
             </div>
+
             <div>
                 <ScrollMenu />
             </div>
