@@ -6,10 +6,13 @@ const port = process.env.PORT || 3000;
 const app = next({dev});
 const handle = app.getRequestHandler();
 
+const api = require("./api/api");
+
 app.prepare()
     .then(() => {
         const server = express();
 
+        server.use(api);
         server.get("*", handle);
 
         server.listen(port, err => {
