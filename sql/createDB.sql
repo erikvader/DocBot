@@ -1,5 +1,4 @@
 CREATE DATABASE IF NOT EXISTS docbot;
-GRANT ALL PRIVILEGES ON docbot.* TO 'root'@'localhost';
 USE docbot;
 
 CREATE TABLE IF NOT EXISTS Entity (
@@ -47,7 +46,7 @@ CREATE TABLE IF NOT EXISTS ConditionEntityValue (
 	save boolean NOT NULL DEFAULT false,
 	FOREIGN KEY (entity_value_id) REFERENCES EntityValue (id) ON DELETE CASCADE,
 	FOREIGN KEY (node_id) REFERENCES Node (id) ON DELETE CASCADE,
-	PRIMARY KEY(entity_value_id, node_id)	
+	PRIMARY KEY(entity_value_id, node_id)
 );
 
 CREATE TABLE IF NOT EXISTS NodeOrder (
@@ -88,7 +87,7 @@ CREATE TABLE IF NOT EXISTS Intent (
 CREATE TABLE IF NOT EXISTS IntentExample (
 	id int UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	intent_id int UNSIGNED NOT NULL,
-	value varchar(128) NOT NULL, 
+	value varchar(128) NOT NULL,
 	FOREIGN KEY (intent_id) REFERENCES Intent (id) ON DELETE CASCADE
 );
 
@@ -99,3 +98,8 @@ CREATE TABLE IF NOT EXISTS ConditionIntent (
 	FOREIGN KEY (intent_id) REFERENCES Intent (id) ON DELETE CASCADE,
 	PRIMARY KEY (node_id, intent_id)
 );
+
+DROP USER IF EXISTS 'docbot_admin'@'localhost';
+CREATE USER 'docbot_admin'@'localhost' IDENTIFIED BY '123';
+
+GRANT ALL PRIVILEGES ON docbot.* TO 'docbot_admin'@'localhost';

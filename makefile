@@ -44,3 +44,9 @@ install-pre-commit:
 .PHONY: commit
 commit: format-staged
 	git commit $(if $(m),-m '$(m)')
+
+# Runs createDatabase.sql script, creating the kvelit database if it doesn't exist
+create-database:
+	@ echo "Creating database"
+	@ read -p "Enter user: " user; \
+	  mysql -u $$user -p < sql/createDB.sql
