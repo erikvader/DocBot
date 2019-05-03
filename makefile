@@ -1,5 +1,5 @@
 
-SRCDIRS := pages components api test
+SRCDIRS := pages components modules test
 #NOTE: MACs didn't like -regex :(
 SRCFILES := server.js $(shell find $(SRCDIRS) -name '*.jsx' -o -name '*.js')
 
