@@ -172,11 +172,13 @@ class Square extends React.Component {
 class Lines extends React.Component {
     constructor(props) {
         super(props);
-        this.stageWidth = null;
-        this.stageHeight = null;
-        this.stageTop = null;
-        this.stageLeft = null;
-        this.squareSizes = {};
+        this.state = {
+            stageWidth: null,
+            stageHeight: null,
+            stageTop: null,
+            stageLeft: null,
+            squareSizes: {}
+        };
         this.stage_wrapper = React.createRef();
     }
     componentDidMount() {
@@ -189,13 +191,9 @@ class Lines extends React.Component {
             width,
             height
         } = this.stage_wrapper.current.getBoundingClientRect();
-        this.stageWidth = width;
-        this.stageHeight = height;
-        this.stageTop = top;
-        this.stageLeft = left;
 
         const reg = /square-(\d+)/;
-        this.squareSizes = Array.prototype.map
+        const squareSizes = Array.prototype.map
             .call(document.getElementsByClassName("square"), ele => ({
                 id: Array.prototype.find
                     .call(ele.classList, c => reg.test(c))
@@ -219,13 +217,19 @@ class Lines extends React.Component {
                 {}
             );
 
-        this.forceUpdate();
+        this.setState({
+            squareSizes: squareSizes,
+            stageWidth: width,
+            stageHeight: height,
+            stageTop: top,
+            stageLeft: left
+        });
     }
     renderLines() {
         let res = [];
         for (const l of this.props.lines) {
-            const from = this.squareSizes[l.from];
-            const to = l.to.map(x => this.squareSizes[x]);
+            const from = this.state.squareSizes[l.from];
+            const to = l.to.map(x => this.state.squareSizes[x]);
 
             let commonMiddle = to.reduce((base, x) => {
                 const cand = (x.y - from.y) / 2;
@@ -238,7 +242,9 @@ class Lines extends React.Component {
                 const points = stem
                     .concat([t.x, from.y + commonMiddle, t.x, t.y])
                     .map((x, i) =>
-                        i % 2 === 0 ? x + this.stageLeft : x + this.stageTop
+                        i % 2 === 0
+                            ? x + this.state.stageLeft
+                            : x + this.state.stageTop
                     );
                 res.push(
                     <Line
@@ -255,10 +261,12 @@ class Lines extends React.Component {
     render() {
         return (
             <div className="stage-wrapper" ref={this.stage_wrapper}>
-                {this.stageWidth && this.stageHeight && (
-                    <Stage width={this.stageWidth} height={this.stageHeight}>
+                {this.state.stageWidth && this.state.stageHeight && (
+                    <Stage
+                        width={this.state.stageWidth}
+                        height={this.state.stageHeight}>
                         <Layer>
-                            {Object.keys(this.squareSizes).length !== 0 &&
+                            {Object.keys(this.state.squareSizes).length !== 0 &&
                                 this.props.lines.length !== 0 &&
                                 this.renderLines()}
                         </Layer>
