@@ -24,14 +24,22 @@ class Contract {
             // Get specific contract
             let sql = "SELECT * FROM Node WHERE id = ? AND root_id IS NULL";
             db.query(sql, [id], (error, result) => {
-                res.send(["specific", ...result]);
+                let contract = result;
+                // Get the questions belonging to that contract
+                sql = "SELECT * FROM Node WHERE root_id = ?";
+                db.query(sql, [id], (error, result) => {
+                    contract.questions = result;
+                    res.send(contract);
+                });
             });
         } else {
             // Get all contracts
+            /*
             let sql = "SELECT * FROM Node WHERE root_id IS NULL";
             db.query(sql, null, (error, result) => {
                 res.send(["all", ...result]);
             });
+            */
         }
     }
     static delete(req, res) {}
