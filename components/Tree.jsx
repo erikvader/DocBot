@@ -21,12 +21,11 @@ export class Node {
     getHeight() {
         return 1;
     }
-    find(id, res) {
+    find(id) {
         if (id === this.id) {
-            res.unshift(this.id);
-            return true;
+            return [this.id];
         }
-        return false;
+        return null;
     }
     deleteNode(path) {
         path.shift();
@@ -56,14 +55,15 @@ export class Choice {
     getLines() {
         return Array.prototype.concat(...this.list.map(x => x.getLines()));
     }
-    find(id, res) {
+    find(id) {
         for (const c of this.list) {
-            if (c.find(id, res)) {
-                res.unshift(this.id);
-                return true;
+            let path = c.find(id);
+            if (path != null) {
+                path.unshift(this.id);
+                return path;
             }
         }
-        return false;
+        return null;
     }
     deleteNode(path) {
         path.shift();
@@ -77,6 +77,15 @@ export class Choice {
         } else {
             return [copy];
         }
+    }
+    insertNode(path, node, above) {
+        path.shift();
+        const ind = this.list.findIndex(x => path[0] === x.id);
+        let copy = clone(this);
+        copy.list = this.list.slice();
+        const add = this.list[ind].insertNode(path, node, above);
+        copy.list.splice(ind, 1, add);
+        return copy;
     }
 }
 
@@ -140,14 +149,15 @@ export class Sequence {
         }
         return res;
     }
-    find(id, res) {
+    find(id) {
         for (const c of this.list) {
-            if (c.find(id, res)) {
-                res.unshift(this.id);
-                return true;
+            let path = c.find(id);
+            if (path != null) {
+                path.unshift(this.id);
+                return path;
             }
         }
-        return false;
+        return null;
     }
     deleteNode(path) {
         path.shift();
@@ -161,6 +171,24 @@ export class Sequence {
         } else {
             return [copy];
         }
+    }
+    insertNode(path, node, above) {
+        path.shift();
+        const ind = this.list.findIndex(x => path[0] === x.id);
+        let copy = clone(this);
+        copy.list = this.list.slice();
+        if (path.length === 1) {
+            // we found the node to add after
+            if (above) {
+                copy.list.splice(ind, 0, node);
+            } else {
+                copy.list.splice(ind + 1, 0, node);
+            }
+        } else {
+            const add = this.list[ind].insertNode(path, node, above);
+            copy.list.splice(ind, 1, add);
+        }
+        return copy;
     }
 }
 
@@ -231,13 +259,52 @@ class Square extends React.Component {
                     position="right center"
                     contentStyle={{padding: "0px", border: "none"}}>
                     {closefun => (
-                        <div
-                            className="remove popup-item"
-                            onClick={() => {
-                                closefun();
-                                this.props.tree.deleteNode(this.props.info);
-                            }}>
-                            Delete
+                        <div>
+                            <div
+                                className="popup-item"
+                                onClick={() => {
+                                    closefun();
+                                    this.props.tree.addNode(
+                                        this.props.info,
+                                        true
+                                    );
+                                }}>
+                                Lägg till ny ovanför
+                            </div>
+                            <div
+                                className="popup-item"
+                                onClick={() => {
+                                    closefun();
+                                    this.props.tree.addNode(this.props.info);
+                                }}>
+                                Lägg till ny under
+                            </div>
+                            <div
+                                className="popup-item"
+                                onClick={() => {
+                                    closefun();
+                                    this.props.tree.addChoice(this.props.info);
+                                }}>
+                                Lägg till följdfrågor
+                            </div>
+                            <div
+                                className="popup-item"
+                                onClick={() => {
+                                    closefun();
+                                    this.props.tree.addContinuation(
+                                        this.props.info
+                                    );
+                                }}>
+                                Lägg till fortsättningsfråga
+                            </div>
+                            <div
+                                className="remove popup-item"
+                                onClick={() => {
+                                    closefun();
+                                    this.props.tree.deleteNode(this.props.info);
+                                }}>
+                                Ta bort
+                            </div>
                         </div>
                     )}
                 </Popup>
@@ -266,7 +333,7 @@ class Square extends React.Component {
                         color: red;
                     }
                     .popup-item {
-                        width: 100%;
+                        padding: 0.2em;
                     }
                     .popup-item:hover {
                         background: gainsboro;
@@ -282,7 +349,6 @@ class Square extends React.Component {
     }
 }
 
-// TODO: handles updates??
 class Lines extends React.Component {
     constructor(props) {
         super(props);
@@ -377,20 +443,28 @@ class Lines extends React.Component {
         }
         return res;
     }
+    sufficientInfo() {
+        return this.props.lines
+            .flatMap(l => [l.from, ...l.to])
+            .every(id => id in this.state.squareSizes);
+    }
     render() {
         return (
             <div className="stage-wrapper" ref={this.stage_wrapper}>
-                {this.state.stageWidth && this.state.stageHeight && (
-                    <Stage
-                        width={this.state.stageWidth}
-                        height={this.state.stageHeight}>
-                        <Layer>
-                            {Object.keys(this.state.squareSizes).length !== 0 &&
-                                this.props.lines.length !== 0 &&
-                                this.renderLines()}
-                        </Layer>
-                    </Stage>
-                )}
+                {this.state.stageWidth &&
+                    this.state.stageHeight &&
+                    this.sufficientInfo() && (
+                        <Stage
+                            width={this.state.stageWidth}
+                            height={this.state.stageHeight}>
+                            <Layer>
+                                {Object.keys(this.state.squareSizes).length !==
+                                    0 &&
+                                    this.props.lines.length !== 0 &&
+                                    this.renderLines()}
+                            </Layer>
+                        </Stage>
+                    )}
                 <style jsx>
                     {`
                         .stage-wrapper {
@@ -412,14 +486,32 @@ export class Tree extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            tree: props.tree
+            tree: props.tree,
+            treeDrew: false
         };
     }
     deleteNode(node) {
-        let path = [];
-        this.state.tree.find(node.id, path);
+        let path = this.state.tree.find(node.id);
         const rem = this.state.tree.deleteNode(path)[0];
         this.setState({tree: rem});
+    }
+    addNode(node, above = false) {
+        let path = this.state.tree.find(node.id);
+        const add = this.state.tree.insertNode(path, new Node(), above);
+        this.setState({tree: add});
+    }
+    addChoice(node) {
+        let path = this.state.tree.find(node.id);
+        const x = new Choice()
+            .addBranch(new Sequence().addNode(new Node()))
+            .addBranch(new Sequence().addNode(new Node()));
+        const add = this.state.tree.insertNode(path, x, false);
+        this.setState({tree: add});
+    }
+    addContinuation(node) {
+        let path = this.state.tree.find(node.id);
+        const add = this.state.tree.insertNode(path, new Node(), false);
+        this.setState({tree: add});
     }
     render() {
         return (
