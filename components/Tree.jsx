@@ -1,6 +1,15 @@
 import {Layer, Stage, Line} from "react-konva";
+import Popup from "reactjs-popup";
+
+// TODO: check for invalid node deletions in deleteNode
+
+// Tree datastructure /////////////////////////////////////////////////////////
 
 let global_id = 0;
+
+function clone(obj) {
+    return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
+}
 
 export class Node {
     constructor(text, color = "pink") {
@@ -11,6 +20,17 @@ export class Node {
     }
     getHeight() {
         return 1;
+    }
+    find(id, res) {
+        if (id === this.id) {
+            res.unshift(this.id);
+            return true;
+        }
+        return false;
+    }
+    deleteNode(path) {
+        path.shift();
+        return [];
     }
 }
 
@@ -35,6 +55,28 @@ export class Choice {
     }
     getLines() {
         return Array.prototype.concat(...this.list.map(x => x.getLines()));
+    }
+    find(id, res) {
+        for (const c of this.list) {
+            if (c.find(id, res)) {
+                res.unshift(this.id);
+                return true;
+            }
+        }
+        return false;
+    }
+    deleteNode(path) {
+        path.shift();
+        const ind = this.list.findIndex(x => path[0] === x.id);
+        const rem = this.list[ind].deleteNode(path);
+        let copy = clone(this);
+        copy.list = this.list.slice();
+        copy.list.splice(ind, 1, ...rem);
+        if (copy.list.length === 1) {
+            return copy.list[0].list;
+        } else {
+            return [copy];
+        }
     }
 }
 
@@ -98,14 +140,38 @@ export class Sequence {
         }
         return res;
     }
+    find(id, res) {
+        for (const c of this.list) {
+            if (c.find(id, res)) {
+                res.unshift(this.id);
+                return true;
+            }
+        }
+        return false;
+    }
+    deleteNode(path) {
+        path.shift();
+        const ind = this.list.findIndex(x => path[0] === x.id);
+        const rem = this.list[ind].deleteNode(path);
+        let copy = clone(this);
+        copy.list = this.list.slice();
+        copy.list.splice(ind, 1, ...rem);
+        if (copy.list.length === 0) {
+            return [];
+        } else {
+            return [copy];
+        }
+    }
 }
+
+// React representation of the Tree ///////////////////////////////////////////
 
 class HoriList extends React.Component {
     render() {
         return (
             <div>
                 {this.props.choice.list.map(x => (
-                    <List key={x.id} sequ={x} />
+                    <List key={x.id} sequ={x} tree={this.props.tree} />
                 ))}
                 <style jsx>{`
                     div {
@@ -127,9 +193,13 @@ class List extends React.Component {
 
         for (const x of this.props.sequ.list) {
             if (x instanceof Choice) {
-                children.push(<HoriList key={x.id} choice={x} />);
+                children.push(
+                    <HoriList key={x.id} choice={x} tree={this.props.tree} />
+                );
             } else {
-                children.push(<Square key={x.id} info={x} />);
+                children.push(
+                    <Square key={x.id} info={x} tree={this.props.tree} />
+                );
             }
         }
 
@@ -152,15 +222,59 @@ class List extends React.Component {
 
 class Square extends React.Component {
     render() {
+        const height = 50;
         return (
             <div className={`square square-${this.props.info.id}`}>
-                {this.props.info.text}
+                <div className="text">{this.props.info.text}</div>
+                <Popup
+                    trigger={<a className="dots">⠇</a>}
+                    position="right center"
+                    contentStyle={{padding: "0px", border: "none"}}>
+                    {closefun => (
+                        <div
+                            className="remove popup-item"
+                            onClick={() => {
+                                closefun();
+                                this.props.tree.deleteNode(this.props.info);
+                            }}>
+                            Delete
+                        </div>
+                    )}
+                </Popup>
                 <style jsx>{`
-                    div {
+                    .square {
                         background: ${this.props.info.color};
                         width: 100px;
-                        height: 50px;
+                        height: ${height}px;
                         margin: 10px;
+                        position: relative;
+                    }
+                    .text {
+                        width: 100%;
+                        text-align: center;
+                        margin-top: 2%;
+                    }
+                    .dots {
+                        position: absolute;
+                        height: 100%;
+                        line-height: ${height}px;
+                        right: 0;
+                        top: 0;
+                    }
+                    .dots:hover {
+                        cursor: pointer;
+                        color: red;
+                    }
+                    .popup-item {
+                        width: 100%;
+                    }
+                    .popup-item:hover {
+                        background: gainsboro;
+                        cursor: pointer;
+                    }
+                    .remove {
+                        color: red;
+                        font-weight: bold;
                     }
                 `}</style>
             </div>
@@ -180,6 +294,11 @@ class Lines extends React.Component {
             squareSizes: {}
         };
         this.stage_wrapper = React.createRef();
+    }
+    componentDidUpdate(prevProps) {
+        if (prevProps.lines !== this.props.lines) {
+            this.updateDOMSizes();
+        }
     }
     componentDidMount() {
         this.updateDOMSizes();
@@ -296,10 +415,16 @@ export class Tree extends React.Component {
             tree: props.tree
         };
     }
+    deleteNode(node) {
+        let path = [];
+        this.state.tree.find(node.id, path);
+        const rem = this.state.tree.deleteNode(path)[0];
+        this.setState({tree: rem});
+    }
     render() {
         return (
             <div className="tree-root">
-                <List sequ={this.state.tree} />
+                <List sequ={this.state.tree} tree={this} />
                 <Lines lines={this.state.tree.getLines()} />
             </div>
         );
