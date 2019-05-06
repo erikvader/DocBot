@@ -22,7 +22,7 @@ const Menu = () => (
             </Link>
         </ul>
         <ul>
-            <Link href="/create contract">
+            <Link href="/createContract">
                 <a style={linkStyle}>Skapa avtal</a>
             </Link>
         </ul>
