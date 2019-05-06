@@ -2,6 +2,7 @@ import {Layer, Stage, Line} from "react-konva";
 import Popup from "reactjs-popup";
 
 // TODO: check for invalid node deletions in deleteNode
+// TODO: choice inherits from sequence
 
 // Tree datastructure /////////////////////////////////////////////////////////
 
@@ -12,11 +13,10 @@ function clone(obj) {
 }
 
 export class Node {
-    constructor(text, color = "pink") {
+    constructor(text) {
         this.id = global_id;
         global_id++;
         this.text = this.id;
-        this.color = color;
     }
     getHeight() {
         return 1;
@@ -56,6 +56,9 @@ export class Choice {
         return Array.prototype.concat(...this.list.map(x => x.getLines()));
     }
     find(id) {
+        if (id === this.id) {
+            return [this.id];
+        }
         for (const c of this.list) {
             let path = c.find(id);
             if (path != null) {
@@ -83,8 +86,17 @@ export class Choice {
         const ind = this.list.findIndex(x => path[0] === x.id);
         let copy = clone(this);
         copy.list = this.list.slice();
-        const add = this.list[ind].insertNode(path, node, above);
-        copy.list.splice(ind, 1, add);
+        if (path.length === 1) {
+            // we found the node to add after
+            if (above) {
+                copy.list.splice(ind, 0, node);
+            } else {
+                copy.list.splice(ind + 1, 0, node);
+            }
+        } else {
+            const add = this.list[ind].insertNode(path, node, above);
+            copy.list.splice(ind, 1, add);
+        }
         return copy;
     }
 }
@@ -150,6 +162,9 @@ export class Sequence {
         return res;
     }
     find(id) {
+        if (id === this.id) {
+            return [this.id];
+        }
         for (const c of this.list) {
             let path = c.find(id);
             if (path != null) {
@@ -190,6 +205,16 @@ export class Sequence {
         }
         return copy;
     }
+    isPreChoice(node) {
+        const ind = this.list.findIndex(x => node === x);
+        if (
+            ind + 1 < this.list.length &&
+            this.list[ind + 1] instanceof Choice
+        ) {
+            return this.list[ind + 1];
+        }
+        return null;
+    }
 }
 
 // React representation of the Tree ///////////////////////////////////////////
@@ -226,7 +251,12 @@ class List extends React.Component {
                 );
             } else {
                 children.push(
-                    <Square key={x.id} info={x} tree={this.props.tree} />
+                    <Square
+                        key={x.id}
+                        info={x}
+                        tree={this.props.tree}
+                        preChoice={this.props.sequ.isPreChoice(x)}
+                    />
                 );
             }
         }
@@ -257,7 +287,11 @@ class Square extends React.Component {
                 <Popup
                     trigger={<a className="dots">⠇</a>}
                     position="right center"
-                    contentStyle={{padding: "0px", border: "none"}}>
+                    contentStyle={{
+                        padding: "0px",
+                        border: "none",
+                        width: "250px"
+                    }}>
                     {closefun => (
                         <div>
                             <div
@@ -271,32 +305,46 @@ class Square extends React.Component {
                                 }}>
                                 Lägg till ny ovanför
                             </div>
+                            {this.props.preChoice === null && (
+                                <div
+                                    className="popup-item"
+                                    onClick={() => {
+                                        closefun();
+                                        this.props.tree.addNode(
+                                            this.props.info
+                                        );
+                                    }}>
+                                    Lägg till ny under
+                                </div>
+                            )}
                             <div
                                 className="popup-item"
                                 onClick={() => {
                                     closefun();
-                                    this.props.tree.addNode(this.props.info);
+                                    if (this.props.preChoice) {
+                                        this.props.tree.addNodeToChoice(
+                                            this.props.preChoice
+                                        );
+                                    } else {
+                                        this.props.tree.addChoice(
+                                            this.props.info
+                                        );
+                                    }
                                 }}>
-                                Lägg till ny under
+                                Lägg till svarsalternativ
                             </div>
-                            <div
-                                className="popup-item"
-                                onClick={() => {
-                                    closefun();
-                                    this.props.tree.addChoice(this.props.info);
-                                }}>
-                                Lägg till följdfrågor
-                            </div>
-                            <div
-                                className="popup-item"
-                                onClick={() => {
-                                    closefun();
-                                    this.props.tree.addContinuation(
-                                        this.props.info
-                                    );
-                                }}>
-                                Lägg till fortsättningsfråga
-                            </div>
+                            {this.props.preChoice && (
+                                <div
+                                    className="popup-item"
+                                    onClick={() => {
+                                        closefun();
+                                        this.props.tree.addNode(
+                                            this.props.preChoice
+                                        );
+                                    }}>
+                                    Lägg till fortsättningsfråga
+                                </div>
+                            )}
                             <div
                                 className="remove popup-item"
                                 onClick={() => {
@@ -310,7 +358,7 @@ class Square extends React.Component {
                 </Popup>
                 <style jsx>{`
                     .square {
-                        background: ${this.props.info.color};
+                        background: ${this.props.preChoice ? "blue" : "pink"};
                         width: 100px;
                         height: ${height}px;
                         margin: 10px;
@@ -508,9 +556,11 @@ export class Tree extends React.Component {
         const add = this.state.tree.insertNode(path, x, false);
         this.setState({tree: add});
     }
-    addContinuation(node) {
-        let path = this.state.tree.find(node.id);
-        const add = this.state.tree.insertNode(path, new Node(), false);
+    addNodeToChoice(choice) {
+        const right = choice.list[choice.list.length - 1]; // TODO: use getter
+        let path = this.state.tree.find(right.id);
+        const x = new Sequence().addNode(new Node());
+        const add = this.state.tree.insertNode(path, x, false);
         this.setState({tree: add});
     }
     render() {
