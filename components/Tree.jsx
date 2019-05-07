@@ -106,6 +106,12 @@ export class Sequence {
         }
         return null;
     }
+    getIdOfLast() {
+        if (this.list.length === 0) {
+            throw "list is empty";
+        }
+        return this.list[this.list.length - 1].id;
+    }
     deleteNode(path) {
         path.shift();
         if (path.length === 0) {
@@ -222,7 +228,6 @@ class List extends React.Component {
         return (
             <div className="list-container">
                 {children}
-                {/* <div className="anchor" /> */}
                 <style jsx>
                     {`
                         .list-container {
@@ -554,17 +559,23 @@ export class Tree extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            tree: props.tree,
+            tree: null,
             treeDrew: false
         };
     }
     deleteNode(...nodes) {
-        let rem = this.state.tree;
+        let tree = this.state.tree;
         for (const n of nodes) {
-            let path = rem.find(n.id);
-            rem = rem.deleteNode(path)[0];
+            let path = tree.find(n.id);
+            const rem = tree.deleteNode(path);
+            if (rem.length === 0) {
+                tree = null;
+                break;
+            } else {
+                tree = rem[0];
+            }
         }
-        this.setState({tree: rem});
+        this.setState({tree: tree});
     }
     addNode(node, above = false) {
         let path = this.state.tree.find(node.id);
@@ -580,17 +591,49 @@ export class Tree extends React.Component {
         this.setState({tree: add});
     }
     addNodeToChoice(choice) {
-        const right = choice.list[choice.list.length - 1]; // TODO: use getter
-        let path = this.state.tree.find(right.id);
+        const right = choice.getIdOfLast();
+        let path = this.state.tree.find(right);
         const x = new Sequence().addNode(new Node());
         const add = this.state.tree.insertNode(path, x, false);
         this.setState({tree: add});
     }
+    addNodeLast() {
+        if (this.state.tree === null) {
+            this.setState({tree: new Sequence().addNode(new Node())});
+        } else {
+            const right = this.state.tree.getIdOfLast();
+            let path = this.state.tree.find(right);
+            const add = this.state.tree.insertNode(path, new Node(), false);
+            this.setState({tree: add});
+        }
+    }
     render() {
         return (
             <div className="tree-root">
-                <List sequ={this.state.tree} tree={this} />
-                <Lines lines={this.state.tree.getLines()} />
+                {this.state.tree && <List sequ={this.state.tree} tree={this} />}
+                {this.state.tree && (
+                    <Lines lines={this.state.tree.getLines()} />
+                )}
+                <div className="plus" onClick={() => this.addNodeLast()}>
+                    +
+                </div>
+                <style jsx>
+                    {`
+                        .plus {
+                            width: 94px;
+                            height: 25px;
+                            border: 3px dotted black;
+                            line-height: 25px;
+                            text-align: center;
+                            font-size: 25px;
+                            margin-left: 10px;
+                        }
+                        .plus:hover {
+                            background: lime;
+                            cursor: pointer;
+                        }
+                    `}
+                </style>
             </div>
         );
     }
