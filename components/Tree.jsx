@@ -33,74 +33,6 @@ export class Node {
     }
 }
 
-export class Choice {
-    constructor() {
-        this.id = global_id;
-        global_id++;
-        this.list = [];
-    }
-    addBranch(sequence) {
-        this.list.push(sequence);
-        return this;
-    }
-    getEntering() {
-        return this.list.map(x => x.getFirst());
-    }
-    getLeaving() {
-        return Array.prototype.concat(...this.list.map(x => x.getEnds()));
-    }
-    getHeight() {
-        return Math.max(...this.list.map(x => x.getHeight()));
-    }
-    getLines() {
-        return Array.prototype.concat(...this.list.map(x => x.getLines()));
-    }
-    find(id) {
-        if (id === this.id) {
-            return [this.id];
-        }
-        for (const c of this.list) {
-            let path = c.find(id);
-            if (path != null) {
-                path.unshift(this.id);
-                return path;
-            }
-        }
-        return null;
-    }
-    deleteNode(path) {
-        path.shift();
-        const ind = this.list.findIndex(x => path[0] === x.id);
-        const rem = this.list[ind].deleteNode(path);
-        let copy = clone(this);
-        copy.list = this.list.slice();
-        copy.list.splice(ind, 1, ...rem);
-        if (copy.list.length === 1) {
-            return copy.list[0].list;
-        } else {
-            return [copy];
-        }
-    }
-    insertNode(path, node, above) {
-        path.shift();
-        const ind = this.list.findIndex(x => path[0] === x.id);
-        let copy = clone(this);
-        copy.list = this.list.slice();
-        if (path.length === 1) {
-            // we found the node to add after
-            if (above) {
-                copy.list.splice(ind, 0, node);
-            } else {
-                copy.list.splice(ind + 1, 0, node);
-            }
-        } else {
-            const add = this.list[ind].insertNode(path, node, above);
-            copy.list.splice(ind, 1, add);
-        }
-        return copy;
-    }
-}
-
 export class Sequence {
     constructor() {
         this.id = global_id;
@@ -214,6 +146,29 @@ export class Sequence {
             return this.list[ind + 1];
         }
         return null;
+    }
+}
+
+export class Choice extends Sequence {
+    addBranch = this.addNode;
+    getEntering() {
+        return this.list.map(x => x.getFirst());
+    }
+    getLeaving() {
+        return Array.prototype.concat(...this.list.map(x => x.getEnds()));
+    }
+    getHeight() {
+        return Math.max(...this.list.map(x => x.getHeight()));
+    }
+    getLines() {
+        return Array.prototype.concat(...this.list.map(x => x.getLines()));
+    }
+    deleteNode(path) {
+        const rem = super.deleteNode(path);
+        if (rem.length > 0 && rem[0].list.length === 1) {
+            return rem[0].list[0].list;
+        }
+        return rem;
     }
 }
 
