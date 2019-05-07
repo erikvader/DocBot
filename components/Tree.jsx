@@ -108,6 +108,9 @@ export class Sequence {
     }
     deleteNode(path) {
         path.shift();
+        if (path.length === 0) {
+            return [];
+        }
         const ind = this.list.findIndex(x => path[0] === x.id);
         const rem = this.list[ind].deleteNode(path);
         let copy = clone(this);
@@ -261,7 +264,7 @@ class Square extends React.Component {
                                 }}>
                                 Lägg till ny ovanför
                             </div>
-                            {this.props.preChoice === null && (
+                            {!this.props.preChoice && (
                                 <div
                                     className="popup-item"
                                     onClick={() => {
@@ -301,14 +304,53 @@ class Square extends React.Component {
                                     Lägg till fortsättningsfråga
                                 </div>
                             )}
-                            <div
-                                className="remove popup-item"
-                                onClick={() => {
-                                    closefun();
-                                    this.props.tree.deleteNode(this.props.info);
-                                }}>
-                                Ta bort
-                            </div>
+                            {!this.props.preChoice && (
+                                <div
+                                    className="remove popup-item"
+                                    onClick={() => {
+                                        closefun();
+                                        this.props.tree.deleteNode(
+                                            this.props.info
+                                        );
+                                    }}>
+                                    Ta bort
+                                </div>
+                            )}
+                            {this.props.preChoice && (
+                                <Popup
+                                    trigger={
+                                        <div className="remove popup-item">
+                                            Ta Bort
+                                        </div>
+                                    }
+                                    onClose={closefun}
+                                    modal>
+                                    {closemodal => (
+                                        <div className="modal-main">
+                                            <div>
+                                                Du kommer att ta bort mer än du
+                                                antar!
+                                            </div>
+                                            <div
+                                                className="modal-abort"
+                                                onClick={closemodal}>
+                                                avbryt
+                                            </div>
+                                            <div
+                                                className="modal-accept"
+                                                onClick={() => {
+                                                    closemodal();
+                                                    this.props.tree.deleteNode(
+                                                        this.props.preChoice,
+                                                        this.props.info
+                                                    );
+                                                }}>
+                                                ta bort
+                                            </div>
+                                        </div>
+                                    )}
+                                </Popup>
+                            )}
                         </div>
                     )}
                 </Popup>
@@ -346,6 +388,28 @@ class Square extends React.Component {
                     .remove {
                         color: red;
                         font-weight: bold;
+                    }
+                    .modal-main {
+                       position: relative;
+                       padding-bottom: 30px;
+                       text-align: center;
+                    }
+                    .modal-abort {
+                       position: absolute;
+                       left: 0;
+                       bottom: 0;
+                       padding 0.3em;
+                    }
+                    .modal-accept {
+                       position: absolute;
+                       bottom: 0;
+                       right: 0;
+                       background: red;
+                       padding 0.3em;
+                    }
+                    .modal-accept:hover, .modal-abort:hover {
+                       cursor: pointer;
+                       background: gainsboro;
                     }
                 `}</style>
             </div>
@@ -494,9 +558,12 @@ export class Tree extends React.Component {
             treeDrew: false
         };
     }
-    deleteNode(node) {
-        let path = this.state.tree.find(node.id);
-        const rem = this.state.tree.deleteNode(path)[0];
+    deleteNode(...nodes) {
+        let rem = this.state.tree;
+        for (const n of nodes) {
+            let path = rem.find(n.id);
+            rem = rem.deleteNode(path)[0];
+        }
         this.setState({tree: rem});
     }
     addNode(node, above = false) {
