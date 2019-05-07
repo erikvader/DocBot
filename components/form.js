@@ -12,7 +12,7 @@ each of these will be separate components
 const saveButtonStyle = {
     position: "absolute",
     left: "1%",
-    bottom: 0
+    bottom: "2%"
 };
 
 const upperLeftCorner = {
@@ -25,8 +25,7 @@ const upperLeftCorner = {
 export default class Form extends React.Component {
     /* State is our container with the required data */
     state = {
-        firstname: "bob ",
-        lastname: ""
+        contractName: "Avtalsnamn "
     };
 
     /* changes the value in state datafield with matching name*/
@@ -40,7 +39,7 @@ export default class Form extends React.Component {
     onSubmit = e => {
         e.preventDefault();
         this.props.onSubmit(this.state);
-        console.log(this.state);
+
         /* here communication should be made with backend so that
       - the contract is stored on the database
       - the list of created contract is updated
@@ -51,8 +50,8 @@ export default class Form extends React.Component {
             <form>
                 <div style={upperLeftCorner}>
                     <input
-                        name="firstname"
-                        value={this.state.firstname}
+                        name="contractName"
+                        value={this.state.contractName}
                         onChange={e => this.change(e)}
                     />
                 </div>

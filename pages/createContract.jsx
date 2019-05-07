@@ -13,7 +13,7 @@ const menuStyle = {
     float: "left",
     width: "25%",
     padding: "1%",
-    height: "100vh",
+    height: "90vh",
     border: "solid"
 };
 
@@ -29,7 +29,7 @@ const optionsDisplay = {
     float: "left",
     width: "69%",
     padding: "1%",
-    height: "100vh",
+    height: "90vh",
     border: "solid"
 };
 class App extends Component {
@@ -48,7 +48,7 @@ class App extends Component {
                 <div style={menuStyle}>
                     <button onClick={goBack}> tillbaka knapp </button>
                     <Form onSubmit={fields => this.onSubmit(fields)} />
-
+                    <br />
                     <div style={treeDisplay} />
                 </div>
                 <div style={optionsDisplay} />
