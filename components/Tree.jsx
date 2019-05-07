@@ -267,7 +267,7 @@ class Square extends React.Component {
                                         true
                                     );
                                 }}>
-                                Lägg till ny ovanför
+                                Lägg till ny fråga ovanför
                             </div>
                             {!this.props.preChoice && (
                                 <div
@@ -278,7 +278,7 @@ class Square extends React.Component {
                                             this.props.info
                                         );
                                     }}>
-                                    Lägg till ny under
+                                    Lägg till ny fråga under
                                 </div>
                             )}
                             <div
@@ -295,7 +295,9 @@ class Square extends React.Component {
                                         );
                                     }
                                 }}>
-                                Lägg till svarsalternativ
+                                {(this.props.preChoice &&
+                                    "Lägg till ny följdfråga") ||
+                                    "Skapa följdfrågor"}
                             </div>
                             {this.props.preChoice && (
                                 <div
@@ -361,7 +363,8 @@ class Square extends React.Component {
                 </Popup>
                 <style jsx>{`
                     .square {
-                        background: ${this.props.preChoice ? "blue" : "pink"};
+background: rgb(241,241,255);
+background: linear-gradient(180deg, rgba(241,241,255,1) 0%, rgba(180,180,255,1) 100%);
                         width: 100px;
                         height: ${height}px;
                         margin: 10px;
@@ -381,7 +384,7 @@ class Square extends React.Component {
                     }
                     .dots:hover {
                         cursor: pointer;
-                        color: red;
+                        color: white;
                     }
                     .popup-item {
                         padding: 0.2em;
@@ -508,7 +511,7 @@ class Lines extends React.Component {
                     <Line
                         key={points.join(" ")}
                         points={points}
-                        stroke={"green"}
+                        stroke={"black"}
                         strokeWidth={2}
                     />
                 );
