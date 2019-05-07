@@ -287,6 +287,7 @@ class Square extends React.Component {
                 <Popup
                     trigger={<a className="dots">⠇</a>}
                     position="right center"
+                    keepTooltipInside={true}
                     contentStyle={{
                         padding: "0px",
                         border: "none",
