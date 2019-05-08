@@ -4,7 +4,7 @@ import Form from "../components/form";
 
 /* function to go back to previous page  */
 const goBack = () => {
-    window.history.back();
+    location.href = "http://localhost:3000/admin";
 };
 
 /* styling for menu */
@@ -46,7 +46,7 @@ class App extends Component {
         return (
             <div>
                 <div style={menuStyle}>
-                    <button onClick={goBack}> tillbaka knapp </button>
+                    <button onClick={goBack}> tillbaka knappen </button>
                     <Form onSubmit={fields => this.onSubmit(fields)} />
                     <br />
                     <div style={treeDisplay} />
