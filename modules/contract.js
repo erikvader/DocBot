@@ -3,6 +3,7 @@
  */
 
 let db = require("./db");
+let {assistant, workspace_id} = require("./watson");
 
 class Contract {
     static create(req, res) {}
