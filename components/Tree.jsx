@@ -488,12 +488,25 @@ class Lines extends React.Component {
     }
     // retreive and store sizes and positions of all Squares
     updateDOMSizes() {
-        let {
-            top,
-            left,
-            width,
-            height
-        } = this.stage_wrapper.current.getBoundingClientRect();
+        const cont = this.props.containerRef.current.getBoundingClientRect();
+        // converts a DOMRect to an object with coordinates relative
+        // to cont instead of the viewport
+        function convert(rect) {
+            return {
+                x: rect.left + rect.width / 2 - cont.left,
+                y: rect.top + rect.height / 2 - cont.top,
+                width: rect.width,
+                height: rect.height,
+                left: rect.left - cont.left,
+                right: rect.right - cont.left,
+                bottom: rect.bottom - cont.top,
+                top: rect.top - cont.top
+            };
+        }
+
+        let {top, left, width, height} = convert(
+            this.stage_wrapper.current.getBoundingClientRect()
+        );
 
         const reg = /square-(\d+)/;
         const squareSizes = Array.prototype.map
@@ -506,27 +519,19 @@ class Lines extends React.Component {
             .reduce(
                 (base, {id, rect}) =>
                     Object.assign(base, {
-                        [id]: {
-                            x: rect.left + rect.width / 2,
-                            y: rect.top + rect.height / 2,
-                            width: rect.width,
-                            height: rect.height,
-                            left: rect.left,
-                            right: rect.right,
-                            bottom: rect.bottom,
-                            top: rect.top
-                        }
+                        [id]: convert(rect)
                     }),
                 {}
             );
 
-        this.setState({
+        const newState = {
             squareSizes: squareSizes,
             stageWidth: width,
             stageHeight: height,
             stageTop: top,
             stageLeft: left
-        });
+        };
+        this.setState(newState);
     }
     renderLines() {
         let res = [];
@@ -542,13 +547,12 @@ class Lines extends React.Component {
             const stem = [from.x, from.y, from.x, from.y + commonMiddle];
 
             for (const t of to) {
-                const points = stem
-                    .concat([t.x, from.y + commonMiddle, t.x, t.y])
-                    .map((x, i) =>
-                        i % 2 === 0
-                            ? x + this.state.stageLeft
-                            : x + this.state.stageTop
-                    );
+                const points = stem.concat([
+                    t.x,
+                    from.y + commonMiddle,
+                    t.x,
+                    t.y
+                ]);
                 res.push(
                     <Line
                         key={points.join(" ")}
@@ -609,6 +613,7 @@ export class Tree extends React.Component {
         this.state = {
             tree: null
         };
+        this.treeRootRef = React.createRef();
     }
     // remove all nodes from the tree
     deleteNode(...nodes) {
@@ -662,16 +667,22 @@ export class Tree extends React.Component {
     }
     render() {
         return (
-            <div className="tree-root">
+            <div className="tree-root" ref={this.treeRootRef}>
                 {this.state.tree && <List sequ={this.state.tree} tree={this} />}
                 {this.state.tree && (
-                    <Lines lines={this.state.tree.getLines()} />
+                    <Lines
+                        lines={this.state.tree.getLines()}
+                        containerRef={this.treeRootRef}
+                    />
                 )}
                 <div className="plus" onClick={() => this.addNodeLast()}>
                     +
                 </div>
                 <style jsx>
                     {`
+                        .tree-root {
+                            position: relative;
+                        }
                         .plus {
                             width: 94px;
                             height: 25px;
