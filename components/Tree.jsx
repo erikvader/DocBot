@@ -336,8 +336,8 @@ class Square extends React.Component {
                                     }
                                 }}>
                                 {(this.props.preChoice &&
-                                    "Lägg till ny följdfråga") ||
-                                    "Skapa följdfrågor"}
+                                    "Lägg till nytt svarsalternativ") ||
+                                    "Gör om till fråga med följdfrågor"}
                             </div>
                             {this.props.preChoice && (
                                 <div
@@ -403,8 +403,8 @@ class Square extends React.Component {
                 </Popup>
                 <style jsx>{`
                     .square {
-                        background: rgb(241,241,255);
-                        background: linear-gradient(180deg, rgba(241,241,255,1) 0%, rgba(180,180,255,1) 100%);
+                        background: rgb(241,252,255);
+                        background: linear-gradient(180deg, rgba(241,252,255,1) 0%, rgba(176,234,255,1) 100%);
                         width: 100px;
                         height: ${height}px;
                         margin: 10px;
@@ -691,6 +691,7 @@ export class Tree extends React.Component {
                             text-align: center;
                             font-size: 25px;
                             margin-left: 10px;
+                            user-select: none;
                         }
                         .plus:hover {
                             background: lime;
