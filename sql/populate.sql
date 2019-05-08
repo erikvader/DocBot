@@ -30,10 +30,10 @@ INSERT INTO EntitySynonym (value, entity_value_id) VALUES ("nope", 6);
 INSERT INTO EntitySynonym (value, entity_value_id) VALUES ("aldrig", 6);
 
 #Node
-INSERT INTO Node (name, sibling_order, catch_node_id, external_id, root_id) VALUES ("Samboavtal", 0, 123, "abc123", null);
-INSERT INTO Node (name, sibling_order, catch_node_id, external_id, root_id) VALUES ("Hur många?", 0, 124, "abc124", 1);
-INSERT INTO Node (name, sibling_order, catch_node_id, external_id, root_id) VALUES ("Nej", 1, 124, "abc125", 1);
-INSERT INTO Node (name, sibling_order, catch_node_id, external_id, root_id) VALUES ("Bil", 0, 125, "abc126", 1);
+INSERT INTO Node (name, sibling_order, catch_node_id, root_id) VALUES ("Samboavtal", 0, 123, null);
+INSERT INTO Node (name, sibling_order, catch_node_id, root_id) VALUES ("Hur många?", 0, 124, 1);
+INSERT INTO Node (name, sibling_order, catch_node_id, root_id) VALUES ("Nej", 1, 124, 1);
+INSERT INTO Node (name, sibling_order, catch_node_id, root_id) VALUES ("Bil", 0, 125, 1);
 
 #QuestionWording
 INSERT INTO QuestionWording (value, node_id) VALUES ("Har du barn?", 1);
@@ -71,4 +71,3 @@ INSERT INTO IntentExample (intent_id, value) VALUES (1, "Min pojkvän ska flytta
 
 #ConditionIntent
 INSERT INTO ConditionIntent (node_id, intent_id) VALUES (1, 1);
-

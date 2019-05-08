@@ -6,12 +6,66 @@ let db = require("./db");
 let {assistant, workspace_id} = require("./watson");
 
 class Contract {
-    static create(req, res) {}
+    /**
+     * Create contract with name. Responds with name and id of
+     * created contract.
+     *
+     * Method: POST
+     * Parameters:
+     *      String name (required)
+     * Status:
+     *      201 created
+     *      400 bad request
+     *
+     * @param  {IncomingMessage} req Reuest object
+     * @param  {ServerResponse} res Response object
+     * @return {void}
+     */
+    static create(req, res) {
+        const name = req.body.name;
+
+        if (typeof name === "undefined") {
+            return res.status(400).send("Parameter name required but not set");
+        }
+
+        // Add it to the database
+        let sql = "INSERT INTO Node (name) VALUES (?)";
+        db.query(sql, [name], (error, result) => {
+            if (error) {
+                console.log(error);
+                return res.status(500).send("Something went wrong");
+            }
+
+            // Send it to watson
+            const params = {
+                workspace_id,
+                dialog_node: "" + result.insertId,
+                title: name
+            };
+
+            assistant
+                .createDialogNode(params)
+                .then(assResponse => {
+                    res.status(201).send({name, contract_id: result.insertId});
+                })
+                .catch(err => {
+                    console.log(err);
+                    res.status(500).send("Something went wrong");
+                });
+        });
+    }
 
     /**
      * Get all contracts, unless id is provided, in
      * which case that contract will be returned along
      * with questions and their formulations and conditions.
+     *
+     * Method: GET
+     * Parameters:
+     *      Number contract_id
+     * Status:
+     *      200 ok
+     *      400 bad request
      *
      * @param  {IncomingMessage} req Reuest object
      * @param  {ServerResponse} res Response object

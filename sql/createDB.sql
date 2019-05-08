@@ -42,7 +42,6 @@ CREATE TABLE IF NOT EXISTS Node (
 	last_changed datetime DEFAULT current_timestamp ON UPDATE current_timestamp,
 	sibling_order int NOT NULL DEFAULT 0,
 	catch_node_id varchar(64),
-	external_id varchar(64) NOT NULL,
 	root_id int UNSIGNED,
 	FOREIGN KEY (root_id) REFERENCES Node (id) ON DELETE CASCADE
 );
