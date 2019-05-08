@@ -76,8 +76,11 @@ class Admin extends Component {
                     <div style={scrollStyle}>
                         <ul>
                             {this.state.info.map((info, index) => {
+                                console.log(this.state.count);
+                                this.getId;
                                 return (
                                     <ScrollMenu
+                                        key={index}
                                         dateChanged={info.dateChanged}
                                         delContract={this.deleteContract.bind(
                                             this,
