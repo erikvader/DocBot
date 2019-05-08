@@ -15,7 +15,17 @@ const menuStyle = {
 };
 
 const Menu = () => (
-    <div style={menuStyle}>
+    <div className="menu-style">
+        <style jsx>
+            {`
+                .menu-style {
+                    float: left;
+                    width: 25%;
+                    padding: 1%;
+                    border: solid;
+                }
+            `}
+        </style>
         <ul>
             <Link href="/admin">
                 <a style={linkStyle}>Startsida</a>
