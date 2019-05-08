@@ -56,8 +56,7 @@ export default class Form extends React.Component {
                     />
                 </div>
                 <button style={saveButtonStyle} onClick={e => this.onSubmit(e)}>
-                    {" "}
-                    Spara{" "}
+                    Spara
                 </button>
             </form>
         );
