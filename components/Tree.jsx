@@ -1,44 +1,54 @@
 import {Layer, Stage, Line} from "react-konva";
 import Popup from "reactjs-popup";
 
-// TODO: check for invalid node deletions in deleteNode
-// TODO: choice inherits from sequence
+// ==================
+// tree datastructure
+// ==================
 
-// Tree datastructure /////////////////////////////////////////////////////////
-
+// global variable to make sure all tree nodes have unique ids
 let global_id = 0;
 
+// create a shallow copy of a object with the correct prototype and
+// stuff
 function clone(obj) {
     return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
 }
 
+// the leaf nodes of the tree. This is the thing that contains all
+// data from the backend including what question to ask.
 export class Node {
     constructor(text) {
         this.id = global_id;
         global_id++;
         this.text = this.id;
     }
+    // see Sequence.getHeight
     getHeight() {
         return 1;
     }
+    // see Sequence.getHeight
     find(id) {
         if (id === this.id) {
             return [this.id];
         }
         return null;
     }
+    // see Sequence.getHeight
     deleteNode(path) {
         path.shift();
         return [];
     }
 }
 
+// A vertical immutable list of either Node or Choice.
+// This is the order in which questions are asked.
 export class Sequence {
     constructor() {
         this.id = global_id;
         global_id++;
         this.list = [];
     }
+    // adds node to this sequence by modifying it
     addNode(node) {
         this.list.push(node);
         return this;
@@ -51,6 +61,7 @@ export class Sequence {
         }
         return f;
     }
+    // returns all nodes that terminate any branch
     getEnds() {
         const l = this.list[this.list.length - 1];
         if (l instanceof Choice) {
@@ -58,9 +69,12 @@ export class Sequence {
         }
         return [l]; // must be a Node
     }
+    // returns the height of this tree
     getHeight() {
         return this.list.map(x => x.getHeight()).reduce((a, b) => a + b, 0);
     }
+    // returns an object with all nodes that should be connected with a line.
+    // the object is on the form {from1: [to1, to2], from2: ...}
     getLines() {
         let res = [];
         let last = null;
@@ -93,6 +107,8 @@ export class Sequence {
         }
         return res;
     }
+    // searches for id and returns a list describing the path needed
+    // to reach id
     find(id) {
         if (id === this.id) {
             return [this.id];
@@ -106,12 +122,19 @@ export class Sequence {
         }
         return null;
     }
+    // returns the node id of the last node, if there is one.
     getIdOfLast() {
         if (this.list.length === 0) {
             throw "list is empty";
         }
         return this.list[this.list.length - 1].id;
     }
+    // returns a list of nodes this should be replaced by to remove
+    // the node from following path. path gets modified.
+    // This returns an empty list if everything got removed.
+    // If there still are things left, this returns a list with one
+    // element. That element is a copy of this node but modified to
+    // have the node described by path removed.
     deleteNode(path) {
         path.shift();
         if (path.length === 0) {
@@ -128,6 +151,9 @@ export class Sequence {
             return [copy];
         }
     }
+    // returns a copy of this node but modified to have node inserted
+    // after the node described in path. If above is true, then the
+    // node is added before instead of after.
     insertNode(path, node, above) {
         path.shift();
         const ind = this.list.findIndex(x => path[0] === x.id);
@@ -146,6 +172,8 @@ export class Sequence {
         }
         return copy;
     }
+    // returns the Choice node that comes after node, if there is one,
+    // null otherwise.
     isPreChoice(node) {
         const ind = this.list.findIndex(x => node === x);
         if (
@@ -158,13 +186,17 @@ export class Sequence {
     }
 }
 
+// a horizontal list of Sequences. A Choice must be preceded by a Node.
 export class Choice extends Sequence {
+    // synonym to make more sense
     addBranch = this.addNode;
+    // returns a list of all nodes beginning an answer alternative
     getEntering() {
         return this.list.map(x => x.getFirst());
     }
+    // returns a list of all nodes ending an answer alternative
     getLeaving() {
-        return Array.prototype.concat(...this.list.map(x => x.getEnds()));
+        return this.list.flatMap(x => x.getEnds());
     }
     getHeight() {
         return Math.max(...this.list.map(x => x.getHeight()));
@@ -172,6 +204,9 @@ export class Choice extends Sequence {
     getLines() {
         return Array.prototype.concat(...this.list.map(x => x.getLines()));
     }
+    // same as Sequence.deleteNode except that this also checks
+    // whether the current Choice only contains one Sequence. If it
+    // does it removes itself and the Sequence
     deleteNode(path) {
         const rem = super.deleteNode(path);
         if (rem.length > 0 && rem[0].list.length === 1) {
@@ -181,8 +216,11 @@ export class Choice extends Sequence {
     }
 }
 
-// React representation of the Tree ///////////////////////////////////////////
+// ================================
+// React representation of the tree
+// ================================
 
+// react compontent for Choice
 class HoriList extends React.Component {
     render() {
         return (
@@ -201,6 +239,7 @@ class HoriList extends React.Component {
     }
 }
 
+// react component for Sequence
 class List extends React.Component {
     constructor(props) {
         super(props);
@@ -241,6 +280,7 @@ class List extends React.Component {
     }
 }
 
+// react component for Node
 class Square extends React.Component {
     render() {
         const height = 50;
@@ -363,8 +403,8 @@ class Square extends React.Component {
                 </Popup>
                 <style jsx>{`
                     .square {
-background: rgb(241,241,255);
-background: linear-gradient(180deg, rgba(241,241,255,1) 0%, rgba(180,180,255,1) 100%);
+                        background: rgb(241,241,255);
+                        background: linear-gradient(180deg, rgba(241,241,255,1) 0%, rgba(180,180,255,1) 100%);
                         width: 100px;
                         height: ${height}px;
                         margin: 10px;
@@ -425,6 +465,7 @@ background: linear-gradient(180deg, rgba(241,241,255,1) 0%, rgba(180,180,255,1) 
     }
 }
 
+// draws all lines between all nodes
 class Lines extends React.Component {
     constructor(props) {
         super(props);
@@ -445,6 +486,7 @@ class Lines extends React.Component {
     componentDidMount() {
         this.updateDOMSizes();
     }
+    // retreive and store sizes and positions of all Squares
     updateDOMSizes() {
         let {
             top,
@@ -519,6 +561,8 @@ class Lines extends React.Component {
         }
         return res;
     }
+    // do we have position and size information about all Squares we
+    // are about to draw?
     sufficientInfo() {
         return this.props.lines
             .flatMap(l => [l.from, ...l.to])
@@ -558,14 +602,15 @@ class Lines extends React.Component {
     }
 }
 
-export class Tree extends React.Component {
+// the main component that keeps the tree state
+export default class Tree extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            tree: null,
-            treeDrew: false
+            tree: null
         };
     }
+    // remove all nodes from the tree
     deleteNode(...nodes) {
         let tree = this.state.tree;
         for (const n of nodes) {
@@ -580,11 +625,13 @@ export class Tree extends React.Component {
         }
         this.setState({tree: tree});
     }
+    // adds a new empty node before or after node
     addNode(node, above = false) {
         let path = this.state.tree.find(node.id);
         const add = this.state.tree.insertNode(path, new Node(), above);
         this.setState({tree: add});
     }
+    // adds two question choices after node
     addChoice(node) {
         let path = this.state.tree.find(node.id);
         const x = new Choice()
@@ -593,6 +640,7 @@ export class Tree extends React.Component {
         const add = this.state.tree.insertNode(path, x, false);
         this.setState({tree: add});
     }
+    // adds a new question choice to an existing choice choice
     addNodeToChoice(choice) {
         const right = choice.getIdOfLast();
         let path = this.state.tree.find(right);
@@ -600,6 +648,8 @@ export class Tree extends React.Component {
         const add = this.state.tree.insertNode(path, x, false);
         this.setState({tree: add});
     }
+    // function for the plus button. Adds an empty node last in the
+    // top level
     addNodeLast() {
         if (this.state.tree === null) {
             this.setState({tree: new Sequence().addNode(new Node())});
