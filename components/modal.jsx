@@ -44,7 +44,7 @@ class AdminModal extends React.Component {
     render() {
         return (
             <div>
-                <button onClick={this.openModal}>Open Modal</button>
+                <button onClick={this.openModal}>Tillbaka</button>
 
                 <Modal
                     ariaHideApp={false}

@@ -35,7 +35,6 @@ const optionsDisplay = {
 class App extends Component {
     /* user input data fields*/
     state = {
-        sShowing: false,
         fields: {}
     };
 
