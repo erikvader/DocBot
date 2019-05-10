@@ -21,23 +21,38 @@ const db = require("./db");
 const {assistant, workspace_id} = require("./watson");
 
 const WELCOME_NODE = "welcome";
+const WELCOME_PHRASE = "Hello, how can I help you?";
 const CONTRACT_CATCH = "contract catch";
+const CONTRACT_CATCH_PHRASE =
+    "Sorry, I don't know if I can help you with that, maybe try rephrasing it?";
 
 class Contract {
     /**
      * Create the catch node for all contracts,
      * which is used when the system can't recognize
      * what the user want.
-     * @param  {String} lastNode Title of the last top-level node.
+     * @param  {String} previousNode Title of the last top-level node.
      * @return {Promise}          Result of API call.
      */
-    static createCatchNode(lastNode) {
+    static createCatchNode(previousNode) {
         return assistant.createDialogNode({
             workspace_id,
             dialog_node: CONTRACT_CATCH,
             title: CONTRACT_CATCH,
             conditions: "anything_else",
-            previous_sibling: lastNode
+            previous_sibling: previousNode,
+            output: {
+                generic: [
+                    {
+                        values: [
+                            {
+                                text: CONTRACT_CATCH_PHRASE
+                            }
+                        ],
+                        response_type: "text"
+                    }
+                ]
+            }
         });
     }
 
@@ -50,7 +65,19 @@ class Contract {
             workspace_id,
             dialog_node: WELCOME_NODE,
             title: WELCOME_NODE,
-            conditions: "welcome"
+            conditions: "welcome",
+            output: {
+                generic: [
+                    {
+                        values: [
+                            {
+                                text: WELCOME_PHRASE
+                            }
+                        ],
+                        response_type: "text"
+                    }
+                ]
+            }
         });
     }
 
@@ -157,7 +184,6 @@ class Contract {
 
             // Check integrity of contract level nodes
             Contract.validateDialogTree().then(r => {
-                console.log("validateDialogTree done");
                 // Send it to watson
                 let params = {
                     workspace_id,
