@@ -2,6 +2,21 @@
  * Module keeping track of contract.
  */
 
+/**
+ * Cool way of documenting:
+ * @api {post} /api/user Create user
+ * @apiName Create new user
+ * @apiPermission admin
+ * @apiGroup User
+ *
+ * @apiParam  {String} [userName] username
+ * @apiParam  {String} [email] Email
+ * @apiParam  {String} [phone] Phone number
+ * @apiParam  {String} [status] Status
+ *
+ * @apiSuccess (200) {Object} mixed `User` object
+ */
+
 const db = require("./db");
 const {assistant, workspace_id} = require("./watson");
 
@@ -82,6 +97,8 @@ class Contract {
                                 .catch(err => {
                                     reject(err);
                                 });
+                        } else {
+                            resolve(true);
                         }
                     }
 
@@ -140,6 +157,7 @@ class Contract {
 
             // Check integrity of contract level nodes
             Contract.validateDialogTree().then(r => {
+                console.log("validateDialogTree done");
                 // Send it to watson
                 let params = {
                     workspace_id,
@@ -217,11 +235,9 @@ class Contract {
                 let contract = nodes.find(node => node.root_id === null);
 
                 if (typeof contract === "undefined") {
-                    return res
-                        .status(400)
-                        .send({
-                            message: "Could not find a contract with that id"
-                        });
+                    return res.status(400).send({
+                        message: "Could not find a contract with that id"
+                    });
                 }
 
                 // Add the questions to the contract
@@ -374,7 +390,132 @@ class Contract {
         });
     }
 
-    static changeCondition(req, res) {}
+    /**
+     * Update the condition of the contract, removes the current conditions and inserts the new ones.
+     * Method: POST
+     * Parameters:
+     *      Number contract_id (required)
+     *      Number[] entity_value_ids (required)
+     *      Number[] intent_ids (required)
+     * Status:
+     *      200 ok
+     *      400 bad request
+     *
+     * @param  {IncomingMessage} req Reuest object
+     * @param  {ServerResponse} res Response object
+     * @return {void}
+     */
+    static changeCondition(req, res) {
+        const contract_id = req.body.contract_id;
+        const entityValueIds = req.body.entity_value_ids;
+        const intentIds = req.body.intent_ids;
+
+        // TODO: Create middleware to handle required parameters
+
+        if (typeof contract_id === "undefined") {
+            return res
+                .status(400)
+                .send({message: "Parameter contract_id required but not set"});
+        }
+
+        if (typeof entityValueIds === "undefined") {
+            return res
+                .status(400)
+                .send({
+                    message: "Parameter entity_value_ids required but not set"
+                });
+        }
+
+        if (typeof intentIds === "undefined") {
+            return res
+                .status(400)
+                .send({message: "Parameter intent_ids required but not set"});
+        }
+
+        // Get contract
+        let sql = "SELECT id FROM Node WHERE id = ? AND root_id IS NULL;";
+        let params = [contract_id];
+
+        // Get names of entity values
+        sql +=
+            "SELECT Entity.name AS name, EntityValue.name AS value FROM EntityValue INNER JOIN Entity ON EntityValue.entity_id = Entity.id WHERE EntityValue.id IN (?);";
+        params.push(entityValueIds);
+
+        // Get names of intents
+        sql += "SELECT name FROM Intent WHERE id IN (?);";
+        params.push(intentIds);
+
+        db.query(sql, params, (error, result) => {
+            if (error) {
+                console.log(error);
+                return res.status(500).send({message: "Something went wrong"});
+            }
+
+            let contract = result[0][0];
+            let entityValues = result[1];
+            let intents = result[2];
+
+            if (typeof contract === "undefined") {
+                return res
+                    .status(400)
+                    .send({message: "No contract with that id"});
+            }
+
+            // Insert the new conditions into the database
+
+            sql = "";
+            params = [];
+            entityValueIds.forEach(id => {
+                sql +=
+                    "INSERT INTO ConditionEntityValue (entity_value_id, node_id) VALUES (?, ?);";
+                params.push(id, contract_id);
+            });
+
+            intentIds.forEach(id => {
+                sql +=
+                    "INSERT INTO ConditionIntent (node_id, intent_id) VALUES (?, ?);";
+                params.push(id, contract_id);
+            });
+
+            db.query(sql, params, (error, result) => {
+                if (error) {
+                    console.log(error);
+                    return res
+                        .status(500)
+                        .send({message: "Something went wrong"});
+                }
+
+                // Send the data to watson
+                let condition = "";
+                intents.forEach(intent => {
+                    // preface with an 'and' if not empty
+                    condition += condition.length === 0 ? "" : " and ";
+                    condition += "#" + intent.name;
+                });
+
+                entityValues.forEach(entity => {
+                    // preface with an 'and' if not empty
+                    condition += condition.length === 0 ? "" : " and ";
+                    condition += "@" + entity.name + ":" + entity.value;
+                });
+
+                let params = {
+                    workspace_id,
+                    dialog_node: "" + contract_id,
+                    new_conditions: condition
+                };
+
+                assistant
+                    .updateDialogNode(params)
+                    .then(resp => {
+                        res.status(200).send(result);
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+            });
+        });
+    }
 }
 
 module.exports = Contract;

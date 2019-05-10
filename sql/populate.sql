@@ -4,21 +4,21 @@ USE docbot;
 
 #Entity
 INSERT INTO Entity (name) VALUES ("person");
-INSERT INTO Entity (name) VALUES ("fordon");
-INSERT INTO Entity (name) VALUES ("ja/nej");
+INSERT INTO Entity (name) VALUES ("vehicle");
+INSERT INTO Entity (name) VALUES ("yes/no");
 
 #EntityValue
 INSERT INTO EntityValue (name, entity_id) VALUES ("partner", 1);
-INSERT INTO EntityValue (name, entity_id) VALUES ("avkomma", 1);
-INSERT INTO EntityValue (name, entity_id) VALUES ("bil", 2);
-INSERT INTO EntityValue (name, entity_id) VALUES ("cykel", 2);
-INSERT INTO EntityValue (name, entity_id) VALUES ("ja", 3);
-INSERT INTO EntityValue (name, entity_id) VALUES ("nej", 3);
+INSERT INTO EntityValue (name, entity_id) VALUES ("offspring", 1);
+INSERT INTO EntityValue (name, entity_id) VALUES ("car", 2);
+INSERT INTO EntityValue (name, entity_id) VALUES ("bicycle", 2);
+INSERT INTO EntityValue (name, entity_id) VALUES ("yes", 3);
+INSERT INTO EntityValue (name, entity_id) VALUES ("no", 3);
 
 
 #EntitySynonym
-INSERT INTO EntitySynonym (value, entity_value_id) VALUES ("flickvän", 1);
-INSERT INTO EntitySynonym (value, entity_value_id) VALUES ("pojkvän", 1);
+INSERT INTO EntitySynonym (value, entity_value_id) VALUES ("girlfriend", 1);
+INSERT INTO EntitySynonym (value, entity_value_id) VALUES ("boyfriend", 1);
 INSERT INTO EntitySynonym (value, entity_value_id) VALUES ("son", 2);
 INSERT INTO EntitySynonym (value, entity_value_id) VALUES ("volvo", 3);
 INSERT INTO EntitySynonym (value, entity_value_id) VALUES ("saab", 3);
@@ -62,7 +62,7 @@ INSERT INTO User (name, email) VALUES ("Ruben", "ruben@rubisk.kub");
 INSERT INTO Answer (entity_value_id, user_id, node_id, root_node_id, value) VALUES (2, 1, 1, 1, "Jag har barn!");
 
 #Intent
-INSERT INTO Intent (name) VALUES ("Flytta ihop");
+INSERT INTO Intent (name) VALUES ("move_in");
 
 #IntentExample
 INSERT INTO IntentExample (intent_id, value) VALUES (1, "Jag och min partner ska flytta ihop");
