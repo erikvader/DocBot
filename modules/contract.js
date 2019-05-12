@@ -161,7 +161,7 @@ class Contract {
      *      201 created
      *      400 bad request
      *
-     * @param  {IncomingMessage} req Reuest object
+     * @param  {IncomingMessage} req Request object
      * @param  {ServerResponse} res Response object
      * @return {void}
      */
