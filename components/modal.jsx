@@ -21,7 +21,7 @@ const placementStyle = {
     float: "left"
 };
 
-class AdminModal extends React.Component {
+class AdminBackbutton extends React.Component {
     constructor() {
         super();
 
@@ -103,4 +103,4 @@ class AdminModal extends React.Component {
     }
 }
 
-export default AdminModal;
+export default AdminBackbutton;

@@ -1,36 +1,8 @@
 import React, {Component} from "react";
 import Link from "next/link";
 import Form from "../components/form";
-import AdminModal from "../components/modal";
-
-/* function to go back to previous page  */
-const goBack = () => {};
-
-/* styling for menu */
-const menuStyle = {
-    position: "relative",
-    float: "left",
-    width: "25%",
-    padding: "1%",
-    height: "90vh",
-    border: "solid"
-};
-
-/* styling for the display field of the tree*/
-const treeDisplay = {
-    position: "relative",
-    height: "50%",
-    border: "solid"
-};
-
-/* styling for the options display field*/
-const optionsDisplay = {
-    float: "left",
-    width: "69%",
-    padding: "1%",
-    height: "90vh",
-    border: "solid"
-};
+import AdminBackbutton from "../components/modal";
+import Tree from "../components/Tree";
 
 class App extends Component {
     /* user input data fields*/
@@ -44,14 +16,55 @@ class App extends Component {
     };
     render() {
         return (
-            <div>
-                <div style={menuStyle}>
-                    <AdminModal />
-                    <Form onSubmit={fields => this.onSubmit(fields)} />
-                    <br />
-                    <div style={treeDisplay} />
+            <div className="root">
+                <div className="menu">
+                    <AdminBackbutton />
+                    <div className="tree">
+                        <Tree />
+                    </div>
                 </div>
-                <div style={optionsDisplay} />
+                <div className="options" />
+                <style jsx>
+                    {`
+                        :global(body) {
+                            padding: 0;
+                            margin: 0;
+                        }
+                        * {
+                            box-sizing: border-box;
+                        }
+                        .root {
+                            height: 100vh;
+                            width: 100vw;
+                            padding: 0.5%;
+                        }
+                        .menu {
+                            position: relative;
+                            float: left;
+                            width: 50%;
+                            padding: 1%;
+                            height: 100%;
+                            border: solid;
+                            display: flex;
+                            flex-direction: column;
+                        }
+                        .tree {
+                            position: relative;
+                            height: 100%;
+                            border: solid;
+                            padding: 0.5%;
+                            overflow-x: auto;
+                            overflow-y: scroll;
+                        }
+                        .options {
+                            float: left;
+                            width: 50%;
+                            padding: 1%;
+                            height: 100%;
+                            border: solid;
+                        }
+                    `}
+                </style>
             </div>
         );
     }

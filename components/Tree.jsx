@@ -607,7 +607,7 @@ class Lines extends React.Component {
 }
 
 // the main component that keeps the tree state
-export class Tree extends React.Component {
+export default class Tree extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
