@@ -8,7 +8,7 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            fields: {},
+            infos: {},
             tree: null
         };
 
@@ -18,13 +18,28 @@ class App extends Component {
         for (const [name, fun] of Object.entries(operations)) {
             this.operations[name] = (...args) =>
                 this.setState((oldState, props) => ({
-                    tree: fun.bind(null, oldState.tree, ...args)()
+                    tree: fun.call(null, oldState.tree, ...args)
                 }));
         }
         this.operations["onClickPlus"] = this.operations["addNodeLast"];
+        this.operations["squareClick"] = node => {
+            this.operations.setFocus(node);
+        };
+    }
+
+    handleInput(event) {
+        const target = event.target;
+        const value = target.value;
+        const name = target.name;
+
+        this.setState({
+            [name]: value
+        });
     }
 
     render() {
+        // TODO: memoize this
+        const focused = this.state.tree && this.state.tree.find(x => x.focused);
         return (
             <div className="root">
                 <div className="menu">
@@ -37,7 +52,19 @@ class App extends Component {
                         />
                     </div>
                 </div>
-                <div className="options" />
+                <div className="options">
+                    {focused && (
+                        <div>
+                            Question:{" "}
+                            <input
+                                value={this.state.value}
+                                name="nodeQuestion"
+                                type="text"
+                                onChange={this.handleInput.bind(this)}
+                            />
+                        </div>
+                    )}
+                </div>
                 <style jsx>
                     {`
                         :global(body) {

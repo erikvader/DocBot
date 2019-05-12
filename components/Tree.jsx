@@ -23,26 +23,36 @@ function runIfExists(obj, funname, ...funargs) {
 // the leaf nodes of the tree. This is the thing that contains all
 // data from the backend including what question to ask.
 export class Node {
-    constructor(text) {
+    constructor(text = "") {
         this.id = global_id;
         global_id++;
-        this.text = this.id;
+        this.text = text;
+        this.focused = false;
     }
     // see Sequence.getHeight
     getHeight() {
         return 1;
     }
-    // see Sequence.getHeight
-    find(id) {
-        if (id === this.id) {
+    // see Sequence.find
+    find(pred) {
+        if (pred(this)) {
             return [this.id];
         }
         return null;
     }
-    // see Sequence.getHeight
+    // see Sequence.deleteNode
     deleteNode(path) {
         path.shift();
         return [];
+    }
+    // see Sequence.modifyNode
+    modifyNode(path, mods) {
+        path.shift();
+        let copy = clone(this);
+        for (const [k, v] of Object.entries(mods)) {
+            copy[k] = v;
+        }
+        return copy;
     }
 }
 
@@ -113,14 +123,16 @@ export class Sequence {
         }
         return res;
     }
-    // searches for id and returns a list describing the path needed
-    // to reach id
-    find(id) {
-        if (id === this.id) {
+    // searches for the first node/sequence/choice that satisfies the
+    // predicate pred. pred is a function that takes the node to check
+    // as it's only argument. The return value is a list with ids
+    // describing the path to take.
+    find(pred) {
+        if (pred(this)) {
             return [this.id];
         }
         for (const c of this.list) {
-            let path = c.find(id);
+            let path = c.find(pred);
             if (path != null) {
                 path.unshift(this.id);
                 return path;
@@ -176,6 +188,16 @@ export class Sequence {
             const add = this.list[ind].insertNode(path, node, above);
             copy.list.splice(ind, 1, add);
         }
+        return copy;
+    }
+    // follows path to modify a node by applying each key-value pair
+    // in mods to node.
+    modifyNode(path, mods) {
+        path.shift();
+        const ind = this.list.findIndex(x => path[0] === x.id);
+        let copy = clone(this);
+        copy.list = this.list.slice();
+        copy.list[ind] = this.list[ind].modifyNode(path, mods);
         return copy;
     }
     // returns the Choice node that comes after node, if there is one,
@@ -382,64 +404,77 @@ class Square extends React.Component {
         }
 
         return (
-            <div className={`square square-${this.props.info.id}`}>
+            <div
+                className={`square square-${this.props.info.id}${
+                    this.props.info.focused ? " focused" : ""
+                }`}
+                onClick={() =>
+                    runIfExists(
+                        this.props.handlers,
+                        "squareClick",
+                        this.props.info
+                    )
+                }>
                 <div className="text">{this.props.info.text}</div>
-                <Popup
-                    trigger={<a className="dots">⠇</a>}
-                    position="right center"
-                    keepTooltipInside={this.props.popupContainer}
-                    contentStyle={{
-                        padding: "0px",
-                        border: "none",
-                        width: "250px"
-                    }}>
-                    {closefun => (
-                        <div>
-                            {createDivs(normalItems, closefun)}
-                            {this.props.preChoice &&
-                                createDivs(preChoiceItems, closefun)}
-                            {!this.props.preChoice &&
-                                createDivs(nonPreChoiceItems, closefun)}
-                            {this.props.preChoice && ( // TODO: remove this special case somehow. Maybe create a confirmation popup component?
-                                <Popup
-                                    trigger={
-                                        <div className="remove popup-item">
-                                            Ta Bort
-                                        </div>
-                                    }
-                                    onClose={closefun}
-                                    modal>
-                                    {closemodal => (
-                                        <div className="modal-main">
-                                            <div>
-                                                Du kommer att ta bort mer än du
-                                                antar!
+                <div onClick={e => e.stopPropagation()}>
+                    <Popup
+                        trigger={<a className="dots">⠇</a>}
+                        position="right center"
+                        keepTooltipInside={this.props.popupContainer}
+                        contentStyle={{
+                            padding: "0px",
+                            border: "none",
+                            width: "250px"
+                        }}>
+                        {closefun => (
+                            <div>
+                                {createDivs(normalItems, closefun)}
+                                {this.props.preChoice &&
+                                    createDivs(preChoiceItems, closefun)}
+                                {!this.props.preChoice &&
+                                    createDivs(nonPreChoiceItems, closefun)}
+                                {this.props.preChoice && ( // TODO: remove this special case somehow. Maybe create a confirmation popup component that can be reused?
+                                    <Popup
+                                        trigger={
+                                            <div className="remove popup-item">
+                                                Ta Bort
                                             </div>
-                                            <div
-                                                className="modal-abort"
-                                                onClick={closemodal}>
-                                                avbryt
+                                        }
+                                        onClose={closefun}
+                                        modal>
+                                        {closemodal => (
+                                            <div className="modal-main">
+                                                <div>
+                                                    Du kommer att ta bort mer än
+                                                    du antar!
+                                                </div>
+                                                <div
+                                                    className="modal-abort"
+                                                    onClick={closemodal}>
+                                                    avbryt
+                                                </div>
+                                                <div
+                                                    className="modal-accept"
+                                                    onClick={() => {
+                                                        closemodal();
+                                                        runIfExists(
+                                                            this.props.handlers,
+                                                            "deleteNode",
+                                                            this.props
+                                                                .preChoice,
+                                                            this.props.info
+                                                        );
+                                                    }}>
+                                                    ta bort
+                                                </div>
                                             </div>
-                                            <div
-                                                className="modal-accept"
-                                                onClick={() => {
-                                                    closemodal();
-                                                    runIfExists(
-                                                        this.props.handlers,
-                                                        "deleteNode",
-                                                        this.props.preChoice,
-                                                        this.props.info
-                                                    );
-                                                }}>
-                                                ta bort
-                                            </div>
-                                        </div>
-                                    )}
-                                </Popup>
-                            )}
-                        </div>
-                    )}
-                </Popup>
+                                        )}
+                                    </Popup>
+                                )}
+                            </div>
+                        )}
+                    </Popup>
+                </div>
                 {/* NOTE: popup-item classes don't work unless they are global for some reason */}
                 <style jsx>{`
                     .square {
@@ -449,6 +484,10 @@ class Square extends React.Component {
                         height: ${height}px;
                         margin: 10px;
                         position: relative;
+                    }
+                    .square.focused {
+                        background: #cb60b3;
+                        background: linear-gradient(to bottom, #cb60b3 0%,#ad1283 50%,#de47ac 100%);
                     }
                     .text {
                         width: 100%;
@@ -461,6 +500,7 @@ class Square extends React.Component {
                         line-height: ${height}px;
                         right: 0;
                         top: 0;
+                        user-select: none;
                     }
                     .dots:hover {
                         cursor: pointer;
@@ -707,13 +747,18 @@ export default class Tree extends React.Component {
     }
 }
 
+// convenience function that searches for a node id
+function idFind(tree, id) {
+    return tree.find(x => x.id === id);
+}
+
 // operations that modifies a Tree. Each function takes the current
 // tree and returns a copy of it with some operation done to it.
 export const operations = {
     // remove all specified nodes from the tree
     deleteNode: function(tree, ...nodes) {
         for (const n of nodes) {
-            let path = tree.find(n.id);
+            let path = idFind(tree, n.id);
             const rem = tree.deleteNode(path);
             if (rem.length === 0) {
                 tree = null;
@@ -726,13 +771,13 @@ export const operations = {
     },
     // adds a new empty node before or after node
     addNode: function(tree, node, above = false) {
-        let path = tree.find(node.id);
+        let path = idFind(tree, node.id);
         const add = tree.insertNode(path, new Node(), above);
         return add;
     },
     // adds two question choices after node
     addChoice: function(tree, node) {
-        let path = tree.find(node.id);
+        let path = idFind(tree, node.id);
         const x = new Choice()
             .addBranch(new Sequence().addNode(new Node()))
             .addBranch(new Sequence().addNode(new Node()));
@@ -742,7 +787,7 @@ export const operations = {
     // adds a new question choice to an existing choice choice
     addNodeToChoice: function(tree, choice) {
         const right = choice.getIdOfLast();
-        let path = tree.find(right);
+        let path = idFind(tree, right);
         const x = new Sequence().addNode(new Node());
         const add = tree.insertNode(path, x, false);
         return add;
@@ -754,9 +799,18 @@ export const operations = {
             return new Sequence().addNode(new Node());
         } else {
             const right = tree.getIdOfLast();
-            let path = tree.find(right);
+            let path = idFind(tree, right);
             const add = tree.insertNode(path, new Node(), false);
             return add;
         }
+    },
+    // changes the focus to the node current
+    setFocus: function(tree, current) {
+        let prev = tree.find(x => x.focused);
+        if (prev !== null) {
+            tree = tree.modifyNode(prev, {focused: false});
+        }
+        let path = idFind(tree, current.id);
+        return tree.modifyNode(path, {focused: true});
     }
 };
