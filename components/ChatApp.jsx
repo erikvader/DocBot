@@ -43,9 +43,7 @@ class ChatApp extends React.Component {
         return (
             <div className="container">
                 <h3>Anna Atticus</h3>
-                <div className="chat-output">
-                    <Messages messages={this.state.messages} />
-                </div>
+                <Messages messages={this.state.messages} />
                 <div className="input-wrapper">
                     <ChatInput
                         onSend={this.sendHandler}
@@ -61,6 +59,7 @@ class ChatApp extends React.Component {
                             "left input-wrapper right";
                         grid-template-columns: auto 768px auto;
                         grid-template-rows: 50px auto 80px;
+                        height: 100vh;
                     }
                     h3 {
                         text-align: center;
@@ -71,7 +70,7 @@ class ChatApp extends React.Component {
                         border-bottom: 1px solid #ddd;
                     }
                     .chat-output {
-                        grid-area: chat-output;
+                        height: 100%;
                     }
                     .input-wrapper {
                         grid-area: input-wrapper;

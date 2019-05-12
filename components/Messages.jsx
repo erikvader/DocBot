@@ -31,6 +31,7 @@ class Messages extends React.Component {
                         overflow-x: hidden;
                         flex-grow: 1;
                         padding: 20px;
+                        grid-area: chat-output;
                     }
                 `}</style>
             </div>
