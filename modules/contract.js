@@ -292,7 +292,7 @@ class Contract {
                     );
                 });
 
-                res.send(contract);
+                res.status(200).send(contract);
             });
         } else {
             // Get all contracts
