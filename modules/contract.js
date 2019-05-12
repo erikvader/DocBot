@@ -222,7 +222,7 @@ class Contract {
      * @return {void}
      */
     static get(req, res) {
-        // Check if contranct_id is set either in query (url) or as GET parameter
+        // Check if contract_id is set either in query (url) or as GET parameter
         let contract_id = {...req.params, ...req.query}.contract_id;
 
         if (typeof contract_id !== "undefined") {
