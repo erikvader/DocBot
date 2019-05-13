@@ -1,5 +1,5 @@
 
-SRCDIRS := pages components api test
+SRCDIRS := pages components modules test
 #NOTE: MACs didn't like -regex :(
 SRCFILES := server.js $(shell find $(SRCDIRS) -name '*.jsx' -o -name '*.js')
 
@@ -44,3 +44,17 @@ install-pre-commit:
 .PHONY: commit
 commit: format-staged
 	git commit $(if $(m),-m '$(m)')
+
+# Runs createDB.sql script, creating the kvelit database if it doesn't exist
+.PHONY: create-database
+create-database:
+	@ echo "Creating database"
+	@ read -p "Enter user: " user; \
+	  mysql -u $$user -p < sql/createDB.sql
+
+# Runs populate.sql, adding dummy data to the database
+.PHONY: populate-database
+populate-database:
+	@ echo "Creating database"
+	@ read -p "Enter user: " user; \
+	  mysql -u $$user -p < sql/populate.sql
