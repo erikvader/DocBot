@@ -1,7 +1,5 @@
-import Link from "next/link";
-import Menu from "../components/Layout";
-import ScrollMenu from "../components/scrollMenu";
+import ChatApp from "../components/chat/ChatApp";
 
 export default function Index() {
-    return <div>this is a chat page</div>;
+    return <ChatApp />;
 }

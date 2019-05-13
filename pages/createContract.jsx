@@ -1,11 +1,10 @@
 import React, {Component} from "react";
 import Link from "next/link";
 import Form from "../components/form";
+import AdminModal from "../components/modal";
 
 /* function to go back to previous page  */
-const goBack = () => {
-    location.href = "http://localhost:3000/admin";
-};
+const goBack = () => {};
 
 /* styling for menu */
 const menuStyle = {
@@ -32,6 +31,7 @@ const optionsDisplay = {
     height: "90vh",
     border: "solid"
 };
+
 class App extends Component {
     /* user input data fields*/
     state = {
@@ -46,7 +46,7 @@ class App extends Component {
         return (
             <div>
                 <div style={menuStyle}>
-                    <button onClick={goBack}> tillbaka knappen </button>
+                    <AdminModal />
                     <Form onSubmit={fields => this.onSubmit(fields)} />
                     <br />
                     <div style={treeDisplay} />
