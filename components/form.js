@@ -30,6 +30,7 @@ export default class Form extends React.Component {
 
     /* changes the value in state datafield with matching name*/
     change = e => {
+        this.props.onSubmit(this.state);
         this.setState({
             [e.target.name]: e.target.value
         });

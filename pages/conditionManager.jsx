@@ -1,6 +1,8 @@
 import React, {Component} from "react";
 import Link from "next/link";
 import Intent from "../components/intents";
+import AdminModal from "../components/modal";
+import ScrollMenu from "../components/scrollMenu";
 
 /* function to go back to previous page  */
 const goBack = () => {
@@ -36,7 +38,10 @@ const optionsDisplay = {
 class ConditionManager extends Component {
     state = {
         intentWindow: true,
-        entityWindow: false
+        entityWindow: false,
+        intentName: "Avtalsnamn ",
+        exampleAnswer: "test",
+        info: [{exampleAnswer: "jag vill flytta ihop med min kille2."}]
     };
 
     showEntity = () => {
@@ -53,12 +58,20 @@ class ConditionManager extends Component {
         });
     };
 
+    deleteContract = (index, e) => {
+        const info = Object.assign([], this.state.info);
+        info.splice(index, 1);
+        this.setState({info: info});
+    };
+
     render() {
         return (
             <div>
                 <div style={menuStyle}>
-                    <button onClick={goBack}> tillbaka knappen </button>
-                    <a> Villkorsskapare </a> <br />
+                    <div style={{width: 10}}>
+                        <AdminModal />
+                    </div>
+                    <a style={{float: "right"}}>Villkorsskapare </a> <br />
                     <br />
                     <button onClick={this.showIntent}> Avsikt</button>
                     <button onClick={this.showEntity}> Entitet </button>
@@ -73,7 +86,7 @@ class ConditionManager extends Component {
                 </div>
                 {this.state.intentWindow && (
                     <div style={optionsDisplay}>
-                        <Intent />
+                        <Intent intentName={this.state} />
                     </div>
                 )}
                 {this.state.entityWindow && <div style={optionsDisplay} />}

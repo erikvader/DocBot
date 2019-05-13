@@ -40,6 +40,7 @@ class App extends Component {
 
     /* note - dev item*/
     onSubmit = fields => {
+        this.setState({fields});
         console.log("App got: ", fields);
     };
     render() {
