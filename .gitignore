@@ -1,3 +1,4 @@
 /node_modules
 /.next
 .dir-locals.el
+.DS_Store
