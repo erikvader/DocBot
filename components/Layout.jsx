@@ -15,14 +15,24 @@ const menuStyle = {
 };
 
 const Menu = () => (
-    <div style={menuStyle}>
+    <div className="menu-style">
+        <style jsx>
+            {`
+                .menu-style {
+                    float: left;
+                    width: 25%;
+                    padding: 1%;
+                    border: solid;
+                }
+            `}
+        </style>
         <ul>
-            <Link href="/">
+            <Link href="/admin">
                 <a style={linkStyle}>Startsida</a>
             </Link>
         </ul>
         <ul>
-            <Link href="/create contract">
+            <Link href="/createContract">
                 <a style={linkStyle}>Skapa avtal</a>
             </Link>
         </ul>
@@ -32,7 +42,7 @@ const Menu = () => (
             </Link>
         </ul>
         <ul>
-            <Link href="/condition manager">
+            <Link href="/conditionManager">
                 <a style={linkStyle}>Villkorsskapare</a>
             </Link>
         </ul>
