@@ -9,7 +9,8 @@ class App extends Component {
         super(props);
         this.state = {
             infos: {},
-            tree: null
+            tree: null,
+            focused: null
         };
 
         // take all pure functions in Tree.operations and convert them
@@ -27,19 +28,65 @@ class App extends Component {
         };
     }
 
-    handleInput(event) {
-        const target = event.target;
-        const value = target.value;
-        const name = target.name;
+    // search and find the currently focused node and save it in
+    // state.
+    updateFocusedNode() {
+        if (!this.state.tree) {
+            this.setState({focused: null});
+        } else {
+            const path = this.state.tree.find(x => x.focused);
+            if (path) {
+                this.setState({focused: path[path.length - 1]});
+            }
+        }
+    }
 
-        this.setState({
-            [name]: value
-        });
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.tree !== this.state.tree) {
+            this.updateFocusedNode();
+        }
+    }
+
+    componentDidMount() {
+        this.updateFocusedNode();
+    }
+
+    // store/change data for the currently focused node
+    handleInput(event) {
+        const value = event.target.value;
+        const name = event.target.name;
+        const focused = this.state.focused;
+
+        if (!focused) {
+            return;
+        }
+
+        let old;
+        if (focused in this.state.infos) {
+            old = Object.assign({}, this.state.infos[focused]);
+        } else {
+            old = {};
+        }
+
+        old[name] = value;
+
+        this.setState((state, props) => ({
+            infos: Object.assign({}, state.infos, {[focused]: old})
+        }));
+    }
+
+    // retreive input data from the currently focused node.
+    getInputValue(name) {
+        if (this.state.focused in this.state.infos) {
+            const cur = this.state.infos[this.state.focused];
+            if (name in cur) {
+                return cur[name];
+            }
+        }
+        return "";
     }
 
     render() {
-        // TODO: memoize this
-        const focused = this.state.tree && this.state.tree.find(x => x.focused);
         return (
             <div className="root">
                 <div className="menu">
@@ -53,11 +100,11 @@ class App extends Component {
                     </div>
                 </div>
                 <div className="options">
-                    {focused && (
+                    {this.state.focused && (
                         <div>
                             Question:{" "}
                             <input
-                                value={this.state.value}
+                                value={this.getInputValue("nodeQuestion")}
                                 name="nodeQuestion"
                                 type="text"
                                 onChange={this.handleInput.bind(this)}
