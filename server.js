@@ -15,7 +15,7 @@ app.prepare()
         server.use(express.json()); // to support JSON-encoded bodies
         server.use(express.urlencoded({extended: true})); // to support URL-encoded bodies
 
-        server.use(api);
+        server.use("/api", api);
         server.get("*", handle);
 
         server.listen(port, err => {

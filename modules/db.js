@@ -24,8 +24,4 @@ let connection = mysql.createConnection({
     multipleStatements: true
 });
 
-connection.connect(error => {
-    if (error) throw error;
-});
-
 module.exports = connection;
