@@ -36,7 +36,7 @@ export class Node {
     // see Sequence.find
     find(pred) {
         if (pred(this)) {
-            return [this.id];
+            return [this];
         }
         return null;
     }
@@ -125,16 +125,16 @@ export class Sequence {
     }
     // searches for the first node/sequence/choice that satisfies the
     // predicate pred. pred is a function that takes the node to check
-    // as it's only argument. The return value is a list with ids
+    // as it's only argument. The return value is a list with nodes
     // describing the path to take.
     find(pred) {
         if (pred(this)) {
-            return [this.id];
+            return [this];
         }
         for (const c of this.list) {
             let path = c.find(pred);
             if (path != null) {
-                path.unshift(this.id);
+                path.unshift(this);
                 return path;
             }
         }
@@ -158,7 +158,7 @@ export class Sequence {
         if (path.length === 0) {
             return [];
         }
-        const ind = this.list.findIndex(x => path[0] === x.id);
+        const ind = this.list.findIndex(x => path[0] === x);
         const rem = this.list[ind].deleteNode(path);
         let copy = clone(this);
         copy.list = this.list.slice();
@@ -174,7 +174,7 @@ export class Sequence {
     // node is added before instead of after.
     insertNode(path, node, above) {
         path.shift();
-        const ind = this.list.findIndex(x => path[0] === x.id);
+        const ind = this.list.findIndex(x => path[0] === x);
         let copy = clone(this);
         copy.list = this.list.slice();
         if (path.length === 1) {
@@ -194,7 +194,7 @@ export class Sequence {
     // in mods to node.
     modifyNode(path, mods) {
         path.shift();
-        const ind = this.list.findIndex(x => path[0] === x.id);
+        const ind = this.list.findIndex(x => path[0] === x);
         let copy = clone(this);
         copy.list = this.list.slice();
         copy.list[ind] = this.list[ind].modifyNode(path, mods);
@@ -812,5 +812,10 @@ export const operations = {
         }
         let path = idFind(tree, current.id);
         return tree.modifyNode(path, {focused: true});
+    },
+    // updates the text on node to text
+    setTextOn: function(tree, node, text) {
+        let path = idFind(tree, node.id);
+        return tree.modifyNode(path, {text});
     }
 };

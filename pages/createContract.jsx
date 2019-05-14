@@ -8,9 +8,10 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            infos: {},
-            tree: null,
-            focused: null
+            infos: {}, // the value of all input fields for all nodes
+            tree: null, // the current tree
+            focused: null, // the focused element in tree
+            focusedIsAlt: false // whether focused is an alternative to a choice or not
         };
 
         // take all pure functions in Tree.operations and convert them
@@ -28,38 +29,51 @@ class App extends Component {
         };
     }
 
-    // search and find the currently focused node and save it in
-    // state.
-    updateFocusedNode() {
-        if (!this.state.tree) {
-            this.setState({focused: null});
-        } else {
-            const path = this.state.tree.find(x => x.focused);
-            if (path) {
-                this.setState({focused: path[path.length - 1]});
+    // function to run everytime tree in state changes
+    treeUpdateHook() {
+        // update node text to match input field
+        const oldFocused = this.state.focused;
+        if (oldFocused) {
+            const curQuestion = this.getInputValue("nodeQuestion") || "";
+            if (oldFocused.text !== curQuestion) {
+                this.operations.setTextOn(oldFocused, curQuestion);
+                this.setState({focused: null});
+                return;
             }
         }
+
+        // search and find the currently focused node and save it in
+        // state.
+        let newFocused = null;
+        if (this.state.tree) {
+            const path = this.state.tree.find(x => x.focused);
+            if (path) {
+                newFocused = path[path.length - 1];
+            }
+        }
+        this.setState({focused: newFocused});
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (prevState.tree !== this.state.tree) {
-            this.updateFocusedNode();
+            this.treeUpdateHook();
         }
     }
 
     componentDidMount() {
-        this.updateFocusedNode();
+        this.treeUpdateHook();
     }
 
     // store/change data for the currently focused node
     handleInput(event) {
         const value = event.target.value;
         const name = event.target.name;
-        const focused = this.state.focused;
+        let focused = this.state.focused;
 
         if (!focused) {
             return;
         }
+        focused = focused.id;
 
         let old;
         if (focused in this.state.infos) {
@@ -77,13 +91,13 @@ class App extends Component {
 
     // retreive input data from the currently focused node.
     getInputValue(name) {
-        if (this.state.focused in this.state.infos) {
-            const cur = this.state.infos[this.state.focused];
+        if (this.state.focused && this.state.focused.id in this.state.infos) {
+            const cur = this.state.infos[this.state.focused.id];
             if (name in cur) {
                 return cur[name];
             }
         }
-        return "";
+        return null;
     }
 
     render() {
@@ -104,7 +118,7 @@ class App extends Component {
                         <div>
                             Question:{" "}
                             <input
-                                value={this.getInputValue("nodeQuestion")}
+                                value={this.getInputValue("nodeQuestion") || ""}
                                 name="nodeQuestion"
                                 type="text"
                                 onChange={this.handleInput.bind(this)}
