@@ -4,6 +4,8 @@ import Form from "../components/form";
 import AdminBackbutton from "../components/modal";
 import Tree, {operations} from "../components/Tree";
 
+// TODO: make the option fritext only be available if a question is
+// NOT a branching question
 class App extends Component {
     constructor(props) {
         super(props);
@@ -11,7 +13,16 @@ class App extends Component {
             infos: {}, // the value of all input fields for all nodes
             tree: null, // the current tree
             focused: null, // the focused element in tree
-            focusedIsAlt: false // whether focused is an alternative to a choice or not
+            focusedBranch: null // the parent question node if focused is a branch to it
+        };
+
+        this.infosDefaults = {
+            nodeQuestion: "",
+            nodeQuestionType: "text",
+            prevYesNo: "yes",
+            prevNumber1: 0,
+            prevNumber2: 0,
+            prevNumberOperator: "="
         };
 
         // take all pure functions in Tree.operations and convert them
@@ -34,7 +45,7 @@ class App extends Component {
         // update node text to match input field
         const oldFocused = this.state.focused;
         if (oldFocused) {
-            const curQuestion = this.getInputValue("nodeQuestion") || "";
+            const curQuestion = this.getInputValue("nodeQuestion");
             if (oldFocused.text !== curQuestion) {
                 this.operations.setTextOn(oldFocused, curQuestion);
                 this.setState({focused: null});
@@ -45,13 +56,18 @@ class App extends Component {
         // search and find the currently focused node and save it in
         // state.
         let newFocused = null;
+        let branchParent = null;
         if (this.state.tree) {
-            const path = this.state.tree.find(x => x.focused);
+            let path = this.state.tree.find(x => x.focused);
             if (path) {
                 newFocused = path[path.length - 1];
+                branchParent = this.state.tree.getBranchParent(path);
             }
         }
-        this.setState({focused: newFocused});
+        this.setState({
+            focused: newFocused,
+            focusedBranch: branchParent
+        });
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -65,7 +81,7 @@ class App extends Component {
     }
 
     // store/change data for the currently focused node
-    handleInput(event) {
+    handleNodeInput(event) {
         const value = event.target.value;
         const name = event.target.name;
         let focused = this.state.focused;
@@ -84,23 +100,128 @@ class App extends Component {
 
         old[name] = value;
 
-        this.setState((state, props) => ({
-            infos: Object.assign({}, state.infos, {[focused]: old})
-        }));
+        this.setState((state, props) => {
+            const res = Object.assign({}, state.infos, {[focused]: old});
+            console.log(res);
+            return {infos: res};
+        });
     }
 
     // retreive input data from the currently focused node.
-    getInputValue(name) {
-        if (this.state.focused && this.state.focused.id in this.state.infos) {
-            const cur = this.state.infos[this.state.focused.id];
+    getInputValue(name, node) {
+        if (node === undefined) {
+            node = this.state.focused;
+        }
+        if (node && node.id in this.state.infos) {
+            const cur = this.state.infos[node.id];
             if (name in cur) {
                 return cur[name];
             }
         }
-        return null;
+        return this.infosDefaults[name];
     }
 
     render() {
+        // figure out what elements to include in .options
+        let optionsBox = [];
+        if (this.state.focused) {
+            optionsBox.push(
+                <div key="question">
+                    Fråga:
+                    <textarea
+                        value={this.getInputValue("nodeQuestion")}
+                        name="nodeQuestion"
+                        onChange={this.handleNodeInput.bind(this)}
+                    />
+                </div>
+            );
+            optionsBox.push(
+                <div key="expectedans">
+                    Förväntat svar:
+                    <select
+                        onChange={this.handleNodeInput.bind(this)}
+                        value={this.getInputValue("nodeQuestionType")}
+                        name="nodeQuestionType">
+                        <option value="yesno">Ja eller Nej</option>
+                        <option value="number">Ett nummer</option>
+                        <option value="text">Fritext</option>
+                    </select>
+                </div>
+            );
+
+            if (this.state.focusedBranch) {
+                const qtype = this.getInputValue(
+                    "nodeQuestionType",
+                    this.state.focusedBranch
+                );
+                if (qtype === "yesno") {
+                    optionsBox.push(
+                        <div key={qtype}>
+                            Krav på föregående:
+                            <br />
+                            <input
+                                type="radio"
+                                name="prevYesNo"
+                                onChange={this.handleNodeInput.bind(this)}
+                                checked={
+                                    this.getInputValue("prevYesNo") === "yes"
+                                }
+                                value="yes"
+                            />
+                            Ja
+                            <br />
+                            <input
+                                type="radio"
+                                name="prevYesNo"
+                                onChange={this.handleNodeInput.bind(this)}
+                                checked={
+                                    this.getInputValue("prevYesNo") === "no"
+                                }
+                                value="no"
+                            />
+                            Nej
+                            <br />
+                        </div>
+                    );
+                } else if (qtype === "number") {
+                    optionsBox.push(
+                        <div key={qtype}>
+                            Siffran från föregående ska vara:
+                            <select
+                                onChange={this.handleNodeInput.bind(this)}
+                                value={this.getInputValue("prevNumberOperator")}
+                                name="prevNumberOperator">
+                                <option value="=">{"="}</option>
+                                <option value=">=">{">="}</option>
+                                <option value="<=">{"<="}</option>
+                                <option value=">">{">"}</option>
+                                <option value="<">{"<"}</option>
+                                <option value="!=">{"!="}</option>
+                                <option value="between">
+                                    mellan (inklusive)
+                                </option>
+                            </select>
+                            <input
+                                type="number"
+                                name="prevNumber1"
+                                onChange={this.handleNodeInput.bind(this)}
+                                value={this.getInputValue("prevNumber1")}
+                            />
+                            {this.getInputValue("prevNumberOperator") ===
+                                "between" && [
+                                "och",
+                                <input
+                                    type="number"
+                                    name="prevNumber2"
+                                    onChange={this.handleNodeInput.bind(this)}
+                                    value={this.getInputValue("prevNumber2")}
+                                />
+                            ]}
+                        </div>
+                    );
+                }
+            }
+        }
         return (
             <div className="root">
                 <div className="menu">
@@ -113,19 +234,7 @@ class App extends Component {
                         />
                     </div>
                 </div>
-                <div className="options">
-                    {this.state.focused && (
-                        <div>
-                            Question:{" "}
-                            <input
-                                value={this.getInputValue("nodeQuestion") || ""}
-                                name="nodeQuestion"
-                                type="text"
-                                onChange={this.handleInput.bind(this)}
-                            />
-                        </div>
-                    )}
-                </div>
+                <div className="options">{optionsBox}</div>
                 <style jsx>
                     {`
                         :global(body) {

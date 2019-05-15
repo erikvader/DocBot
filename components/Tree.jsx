@@ -10,6 +10,8 @@ function clone(obj) {
     return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
 }
 
+// run funname if it exists in obj. funname will receive funargs as
+// arguments.
 function runIfExists(obj, funname, ...funargs) {
     if (funname in obj) {
         return obj[funname](...funargs);
@@ -53,6 +55,11 @@ export class Node {
             copy[k] = v;
         }
         return copy;
+    }
+    // see Sequence.getBranchParent
+    getBranchParent(path) {
+        path.shift();
+        return null;
     }
 }
 
@@ -212,6 +219,18 @@ export class Sequence {
         }
         return null;
     }
+    getBranchParent(path) {
+        path.shift();
+        const ind = this.list.findIndex(x => path[0] === x);
+        if (
+            path.length === 3 &&
+            this.list[ind] instanceof Choice &&
+            this.list[ind].isBranch(path[path.length - 1])
+        ) {
+            return this.list[ind - 1];
+        }
+        return this.list[ind].getBranchParent(path);
+    }
 }
 
 // a horizontal list of Sequences. A Choice must be preceded by a Node.
@@ -241,6 +260,15 @@ export class Choice extends Sequence {
             return rem[0].list[0].list;
         }
         return rem;
+    }
+    // is node a branching question on this choice?
+    isBranch(node) {
+        for (const seq of this.list) {
+            if (seq.getFirst() === node) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 
@@ -322,7 +350,6 @@ class List extends React.Component {
 // react component for Node
 class Square extends React.Component {
     render() {
-        const height = 50;
         const preChoiceItems = [
             [
                 "",
@@ -403,11 +430,14 @@ class Square extends React.Component {
             ));
         }
 
+        const height = 50;
+        const width = 100;
+        const squareClasses = `square-${this.props.info.id}${
+            this.props.info.focused ? " focused" : ""
+        }`;
         return (
             <div
-                className={`square square-${this.props.info.id}${
-                    this.props.info.focused ? " focused" : ""
-                }`}
+                className={`square ${squareClasses}`}
                 onClick={() =>
                     runIfExists(
                         this.props.handlers,
@@ -416,7 +446,9 @@ class Square extends React.Component {
                     )
                 }>
                 <div className="text">{this.props.info.text}</div>
-                <div onClick={e => e.stopPropagation()}>
+                <div
+                    className="dots-container"
+                    onClick={e => e.stopPropagation()}>
                     <Popup
                         trigger={<a className="dots">⠇</a>}
                         position="right center"
@@ -480,31 +512,37 @@ class Square extends React.Component {
                     .square {
                         background: rgb(241,252,255);
                         background: linear-gradient(180deg, rgba(241,252,255,1) 0%, rgba(176,234,255,1) 100%);
-                        width: 100px;
+                        width: ${width}px;
                         height: ${height}px;
                         margin: 10px;
                         position: relative;
+                        padding: 0.3em;
+                        padding-right: 0;
+                        display: flex;
                     }
                     .square.focused {
                         background: #cb60b3;
                         background: linear-gradient(to bottom, #cb60b3 0%,#ad1283 50%,#de47ac 100%);
                     }
-                    .text {
-                        width: 100%;
-                        text-align: center;
-                        margin-top: 2%;
+                    .dots-container {
                     }
                     .dots {
-                        position: absolute;
-                        height: 100%;
                         line-height: ${height}px;
-                        right: 0;
-                        top: 0;
                         user-select: none;
+                        z-index: 2;
                     }
                     .dots:hover {
                         cursor: pointer;
                         color: white;
+                    }
+                    .text {
+                        line-height: ${height}px;
+                        text-align: center;
+                        text-overflow: ellipsis;
+                        overflow: hidden;
+                        white-space: nowrap;
+                        user-select: none;
+                        flex-grow: 1;
                     }
                     :global(.popup-item) {
                         padding: 0.2em;
