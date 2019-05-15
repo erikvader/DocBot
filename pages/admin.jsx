@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Menu from "../components/Layout";
+import Layout from "../components/Layout";
 import ScrollMenu from "../components/scrollMenu";
 import React, {Component} from "react";
 
@@ -8,9 +8,8 @@ const scrollStyle = {
     overflow: "scroll",
     float: "right",
     width: "69%",
-
     height: "90vh",
-    border: "solid"
+    background: "#FAF8F8"
 };
 
 /* Styling of scrol menu overhead*/
@@ -18,8 +17,7 @@ const headerStyling = {
     float: "right",
     position: "relative",
     top: 0,
-    width: "69%",
-    border: "solid red"
+    width: "69%"
 };
 /*styling for individual column */
 const header_1 = {
@@ -59,11 +57,7 @@ class Admin extends Component {
 
     render() {
         return (
-            <div>
-                <div>
-                    <Menu />
-                </div>
-
+            <Layout>
                 <div>
                     <div style={headerStyling}>
                         <div>
@@ -93,7 +87,7 @@ class Admin extends Component {
                         </ul>
                     </div>
                 </div>
-            </div>
+            </Layout>
         );
     }
 }

@@ -1,52 +1,29 @@
-import Link from "next/link";
+import Menu from "./Menu";
 
-// margin for the links in the menu
-const linkStyle = {
-    marginRight: 15
+const layoutStyle = {
+    margin: 20,
+    padding: 20,
+    border: "1px solid #DDD"
 };
 
-//Styling for the menu
-
-const menuStyle = {
-    float: "left",
-    width: "25%",
-    padding: "1%",
-    border: "solid"
+const test = {
+    background: "red"
 };
 
-const Menu = () => (
-    <div className="menu-style">
+const Layout = props => (
+    <div style={test}>
+        <div>
+            <Menu />
+            {props.children}
+        </div>
         <style jsx>
             {`
-                .menu-style {
-                    float: left;
-                    width: 25%;
-                    padding: 1%;
-                    border: solid;
+                body {
+                    background: red;
                 }
             `}
         </style>
-        <ul>
-            <Link href="/admin">
-                <a style={linkStyle}>Startsida</a>
-            </Link>
-        </ul>
-        <ul>
-            <Link href="/createContract">
-                <a style={linkStyle}>Skapa avtal</a>
-            </Link>
-        </ul>
-        <ul>
-            <Link href="/filledContracts">
-                <a style={linkStyle}>Ifyllda avtal</a>
-            </Link>
-        </ul>
-        <ul>
-            <Link href="/conditionManager">
-                <a style={linkStyle}>Villkorsskapare</a>
-            </Link>
-        </ul>
     </div>
 );
 
-export default Menu;
+export default Layout;

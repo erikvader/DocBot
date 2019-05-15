@@ -445,11 +445,9 @@ class Contract {
         }
 
         if (typeof entityValueIds === "undefined") {
-            return res
-                .status(400)
-                .send({
-                    message: "Parameter entity_value_ids required but not set"
-                });
+            return res.status(400).send({
+                message: "Parameter entity_value_ids required but not set"
+            });
         }
 
         if (typeof intentIds === "undefined") {
