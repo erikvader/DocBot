@@ -209,16 +209,23 @@ export class Sequence {
     }
     // returns the Choice node that comes after node, if there is one,
     // null otherwise.
-    isPreChoice(node) {
-        const ind = this.list.findIndex(x => node === x);
-        if (
-            ind + 1 < this.list.length &&
-            this.list[ind + 1] instanceof Choice
-        ) {
-            return this.list[ind + 1];
+    isPreChoice(path) {
+        path.shift();
+        const ind = this.list.findIndex(x => path[0] === x);
+        if (path.length === 1) {
+            if (
+                ind + 1 < this.list.length &&
+                this.list[ind + 1] instanceof Choice
+            ) {
+                return this.list[ind + 1];
+            } else {
+                return null;
+            }
         }
-        return null;
+        return this.list[ind].isPreChoice(path);
     }
+    // returns the node that comes before a Choice. Path should refer
+    // to one of the first nodes in any sequence inside a Choice.
     getBranchParent(path) {
         path.shift();
         const ind = this.list.findIndex(x => path[0] === x);
@@ -324,7 +331,10 @@ class List extends React.Component {
                         key={x.id}
                         info={x}
                         handlers={this.props.handlers}
-                        preChoice={this.props.sequ.isPreChoice(x)}
+                        preChoice={this.props.sequ.isPreChoice([
+                            this.props.sequ.id,
+                            x
+                        ])}
                         popupContainer={this.props.popupContainer}
                     />
                 );

@@ -5,7 +5,9 @@ import AdminBackbutton from "../components/modal";
 import Tree, {operations} from "../components/Tree";
 
 // TODO: make the option fritext only be available if a question is
-// NOT a branching question
+//       NOT a branching question
+// TODO: some input data in infos are still present even if they don't
+//       apply anymore (for example if a node isn't after a branch question anymore)
 class App extends Component {
     constructor(props) {
         super(props);
@@ -13,7 +15,8 @@ class App extends Component {
             infos: {}, // the value of all input fields for all nodes
             tree: null, // the current tree
             focused: null, // the focused element in tree
-            focusedBranch: null // the parent question node if focused is a branch to it
+            focusedBranch: null, // the parent question node if focused is the beginning of a branch
+            focusedPreChoice: null //the Choice node (if there is one) following focused
         };
 
         this.infosDefaults = {
@@ -56,17 +59,20 @@ class App extends Component {
         // search and find the currently focused node and save it in
         // state.
         let newFocused = null;
-        let branchParent = null;
+        let focusedBranch = null;
+        let focusedPreChoice = null;
         if (this.state.tree) {
             let path = this.state.tree.find(x => x.focused);
             if (path) {
                 newFocused = path[path.length - 1];
-                branchParent = this.state.tree.getBranchParent(path);
+                focusedBranch = this.state.tree.getBranchParent(path.slice());
+                focusedPreChoice = this.state.tree.isPreChoice(path.slice());
             }
         }
         this.setState({
             focused: newFocused,
-            focusedBranch: branchParent
+            focusedBranch,
+            focusedPreChoice
         });
     }
 
