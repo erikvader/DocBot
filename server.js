@@ -7,6 +7,7 @@ const app = next({dev});
 const handle = app.getRequestHandler();
 
 const api = require("./modules/api");
+const ws = require("./modules/messaging");
 
 app.prepare()
     .then(() => {

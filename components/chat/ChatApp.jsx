@@ -19,6 +19,29 @@ class ChatApp extends React.Component {
         //});
     }
 
+    componentDidMount() {
+        this.socket = new WebSocket("ws://localhost:1337");
+
+        // Connection is established with server
+        this.socket.onopen = event => {
+        };
+
+        // Receiving messages from server
+        this.socket.onmessage = event => {
+            let message = event.data;
+
+
+            this.addMessage({
+                username: "Anna",
+                message
+            });
+        };
+    }
+
+    componentWillUnmount() {
+        this.socket.close();
+    }
+
     sendHandler(message) {
         const messageObject = {
             username: this.props.username,
@@ -26,7 +49,7 @@ class ChatApp extends React.Component {
         };
 
         // Emit the message to the server
-        //this.socket.emit('client:message', messageObject);
+        this.socket.send(message);
 
         messageObject.fromMe = true;
         this.addMessage(messageObject);

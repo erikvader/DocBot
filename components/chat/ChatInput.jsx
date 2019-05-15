@@ -54,10 +54,11 @@ class ChatInput extends React.Component {
                         -webkit-transition: border-color 0.2s ease-in-out;
                         -moz-transition: border-color 0.2s ease-in-out;
                         transition: border-color 0.2s ease-in-out;
-                        text-indent: 5px;
+                        text-indent: 15px;
+                        border-radius: 10px;
                     }
                     input[type="text"]:focus {
-                        border: 1px solid #af9570;
+                        border: 1px solid #ff4a4a;
                         outline: none !important;
                     }
                 `}</style>

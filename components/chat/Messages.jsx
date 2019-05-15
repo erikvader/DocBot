@@ -33,6 +33,10 @@ class Messages extends React.Component {
                         padding: 20px;
                         grid-area: chat-output;
                     }
+
+                    .messages::-webkit-scrollbar {
+                        display: none;
+                    }
                 `}</style>
             </div>
         );
