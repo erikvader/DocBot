@@ -16,7 +16,8 @@ class App extends Component {
             tree: null, // the current tree
             focused: null, // the focused element in tree
             focusedBranch: null, // the parent question node if focused is the beginning of a branch
-            focusedPreChoice: null //the Choice node (if there is one) following focused
+            focusedPreChoice: null, //the Choice node (if there is one) following focused
+            contractName: ""
         };
 
         this.infosDefaults = {
@@ -127,6 +128,11 @@ class App extends Component {
         return this.infosDefaults[name];
     }
 
+    onSave(e) {
+        e.preventDefault();
+        console.log(this.state.contractName);
+    }
+
     render() {
         // figure out what elements to include in .options
         let optionsBox = [];
@@ -232,6 +238,13 @@ class App extends Component {
             <div className="root">
                 <div className="menu">
                     <AdminBackbutton />
+                    <input
+                        name="contractName"
+                        value={this.state.contractName}
+                        onChange={e =>
+                            this.setState({[e.target.name]: e.target.value})
+                        }
+                    />
                     <div className="tree">
                         <Tree
                             tree={this.state.tree}
@@ -239,6 +252,7 @@ class App extends Component {
                             popupContainer={".tree"}
                         />
                     </div>
+                    <button onClick={this.onSave.bind(this)}>Spara</button>
                 </div>
                 <div className="options">{optionsBox}</div>
                 <style jsx>
