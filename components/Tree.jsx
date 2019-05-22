@@ -1,10 +1,6 @@
 import {Layer, Stage, Line} from "react-konva";
 import Popup from "reactjs-popup";
 
-// ==================
-// tree datastructure
-// ==================
-
 // global variable to make sure all tree nodes have unique ids
 let global_id = 0;
 
@@ -14,29 +10,56 @@ function clone(obj) {
     return Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
 }
 
+// run funname if it exists in obj. funname will receive funargs as
+// arguments.
+function runIfExists(obj, funname, ...funargs) {
+    if (funname in obj) {
+        return obj[funname](...funargs);
+    }
+    return null;
+}
+
+// ==================
+// tree datastructure
+// ==================
 // the leaf nodes of the tree. This is the thing that contains all
 // data from the backend including what question to ask.
 export class Node {
-    constructor(text) {
+    constructor(text = "") {
         this.id = global_id;
         global_id++;
-        this.text = this.id;
+        this.text = text;
+        this.focused = false;
     }
     // see Sequence.getHeight
     getHeight() {
         return 1;
     }
-    // see Sequence.getHeight
-    find(id) {
-        if (id === this.id) {
-            return [this.id];
+    // see Sequence.find
+    find(pred) {
+        if (pred(this)) {
+            return [this];
         }
         return null;
     }
-    // see Sequence.getHeight
+    // see Sequence.deleteNode
     deleteNode(path) {
         path.shift();
         return [];
+    }
+    // see Sequence.modifyNode
+    modifyNode(path, mods) {
+        path.shift();
+        let copy = clone(this);
+        for (const [k, v] of Object.entries(mods)) {
+            copy[k] = v;
+        }
+        return copy;
+    }
+    // see Sequence.getBranchParent
+    getBranchParent(path) {
+        path.shift();
+        return null;
     }
 }
 
@@ -107,16 +130,18 @@ export class Sequence {
         }
         return res;
     }
-    // searches for id and returns a list describing the path needed
-    // to reach id
-    find(id) {
-        if (id === this.id) {
-            return [this.id];
+    // searches for the first node/sequence/choice that satisfies the
+    // predicate pred. pred is a function that takes the node to check
+    // as it's only argument. The return value is a list with nodes
+    // describing the path to take.
+    find(pred) {
+        if (pred(this)) {
+            return [this];
         }
         for (const c of this.list) {
-            let path = c.find(id);
+            let path = c.find(pred);
             if (path != null) {
-                path.unshift(this.id);
+                path.unshift(this);
                 return path;
             }
         }
@@ -140,7 +165,7 @@ export class Sequence {
         if (path.length === 0) {
             return [];
         }
-        const ind = this.list.findIndex(x => path[0] === x.id);
+        const ind = this.list.findIndex(x => path[0] === x);
         const rem = this.list[ind].deleteNode(path);
         let copy = clone(this);
         copy.list = this.list.slice();
@@ -156,7 +181,7 @@ export class Sequence {
     // node is added before instead of after.
     insertNode(path, node, above) {
         path.shift();
-        const ind = this.list.findIndex(x => path[0] === x.id);
+        const ind = this.list.findIndex(x => path[0] === x);
         let copy = clone(this);
         copy.list = this.list.slice();
         if (path.length === 1) {
@@ -172,17 +197,46 @@ export class Sequence {
         }
         return copy;
     }
+    // follows path to modify a node by applying each key-value pair
+    // in mods to node.
+    modifyNode(path, mods) {
+        path.shift();
+        const ind = this.list.findIndex(x => path[0] === x);
+        let copy = clone(this);
+        copy.list = this.list.slice();
+        copy.list[ind] = this.list[ind].modifyNode(path, mods);
+        return copy;
+    }
     // returns the Choice node that comes after node, if there is one,
     // null otherwise.
-    isPreChoice(node) {
-        const ind = this.list.findIndex(x => node === x);
-        if (
-            ind + 1 < this.list.length &&
-            this.list[ind + 1] instanceof Choice
-        ) {
-            return this.list[ind + 1];
+    isPreChoice(path) {
+        path.shift();
+        const ind = this.list.findIndex(x => path[0] === x);
+        if (path.length === 1) {
+            if (
+                ind + 1 < this.list.length &&
+                this.list[ind + 1] instanceof Choice
+            ) {
+                return this.list[ind + 1];
+            } else {
+                return null;
+            }
         }
-        return null;
+        return this.list[ind].isPreChoice(path);
+    }
+    // returns the node that comes before a Choice. Path should refer
+    // to one of the first nodes in any sequence inside a Choice.
+    getBranchParent(path) {
+        path.shift();
+        const ind = this.list.findIndex(x => path[0] === x);
+        if (
+            path.length === 3 &&
+            this.list[ind] instanceof Choice &&
+            this.list[ind].isBranch(path[path.length - 1])
+        ) {
+            return this.list[ind - 1];
+        }
+        return this.list[ind].getBranchParent(path);
     }
 }
 
@@ -214,6 +268,15 @@ export class Choice extends Sequence {
         }
         return rem;
     }
+    // is node a branching question on this choice?
+    isBranch(node) {
+        for (const seq of this.list) {
+            if (seq.getFirst() === node) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 // ================================
@@ -226,7 +289,12 @@ class HoriList extends React.Component {
         return (
             <div>
                 {this.props.choice.list.map(x => (
-                    <List key={x.id} sequ={x} tree={this.props.tree} />
+                    <List
+                        key={x.id}
+                        sequ={x}
+                        handlers={this.props.handlers}
+                        popupContainer={this.props.popupContainer}
+                    />
                 ))}
                 <style jsx>{`
                     div {
@@ -250,15 +318,24 @@ class List extends React.Component {
         for (const x of this.props.sequ.list) {
             if (x instanceof Choice) {
                 children.push(
-                    <HoriList key={x.id} choice={x} tree={this.props.tree} />
+                    <HoriList
+                        key={x.id}
+                        choice={x}
+                        handlers={this.props.handlers}
+                        popupContainer={this.props.popupContainer}
+                    />
                 );
             } else {
                 children.push(
                     <Square
                         key={x.id}
                         info={x}
-                        tree={this.props.tree}
-                        preChoice={this.props.sequ.isPreChoice(x)}
+                        handlers={this.props.handlers}
+                        preChoice={this.props.sequ.isPreChoice([
+                            this.props.sequ.id,
+                            x
+                        ])}
+                        popupContainer={this.props.popupContainer}
                     />
                 );
             }
@@ -283,157 +360,208 @@ class List extends React.Component {
 // react component for Node
 class Square extends React.Component {
     render() {
-        const height = 50;
-        return (
-            <div className={`square square-${this.props.info.id}`}>
-                <div className="text">{this.props.info.text}</div>
-                <Popup
-                    trigger={<a className="dots">⠇</a>}
-                    position="right center"
-                    keepTooltipInside={true}
-                    contentStyle={{
-                        padding: "0px",
-                        border: "none",
-                        width: "250px"
+        const preChoiceItems = [
+            [
+                "",
+                "Lägg till nytt svarsalternativ",
+                () =>
+                    runIfExists(
+                        this.props.handlers,
+                        "addNodeToChoice",
+                        this.props.preChoice
+                    )
+            ],
+            [
+                "",
+                "Lägg till fortsättningsfråga",
+                () =>
+                    runIfExists(
+                        this.props.handlers,
+                        "addNode",
+                        this.props.preChoice
+                    )
+            ]
+        ];
+        const nonPreChoiceItems = [
+            [
+                "",
+                "Gör om till fråga med följdfrågor",
+                () =>
+                    runIfExists(
+                        this.props.handlers,
+                        "addChoice",
+                        this.props.info
+                    )
+            ],
+            [
+                "",
+                "Lägg till ny fråga under",
+                () =>
+                    runIfExists(this.props.handlers, "addNode", this.props.info)
+            ],
+            [
+                "remove",
+                "Ta Bort",
+                () =>
+                    runIfExists(
+                        this.props.handlers,
+                        "deleteNode",
+                        this.props.info
+                    )
+            ]
+        ];
+        const normalItems = [
+            [
+                "",
+                "Lägg till ny fråga ovanför",
+                () =>
+                    runIfExists(
+                        this.props.handlers,
+                        "addNode",
+                        this.props.info,
+                        true
+                    )
+            ]
+        ];
+
+        function createDivs(elements, closefun) {
+            return elements.map(([classes, content, onclick], i) => (
+                <div
+                    key={i}
+                    className={
+                        classes === "" ? "popup-item" : classes + " popup-item"
+                    }
+                    onClick={() => {
+                        closefun();
+                        onclick();
                     }}>
-                    {closefun => (
-                        <div>
-                            <div
-                                className="popup-item"
-                                onClick={() => {
-                                    closefun();
-                                    this.props.tree.addNode(
-                                        this.props.info,
-                                        true
-                                    );
-                                }}>
-                                Lägg till ny fråga ovanför
+                    {content}
+                </div>
+            ));
+        }
+
+        const height = 50;
+        const width = 100;
+        const squareClasses = `square-${this.props.info.id}${
+            this.props.info.focused ? " focused" : ""
+        }`;
+        return (
+            <div
+                className={`square ${squareClasses}`}
+                onClick={() =>
+                    runIfExists(
+                        this.props.handlers,
+                        "squareClick",
+                        this.props.info
+                    )
+                }>
+                <div className="text">{this.props.info.text}</div>
+                <div
+                    className="dots-container"
+                    onClick={e => e.stopPropagation()}>
+                    <Popup
+                        trigger={<a className="dots">⠇</a>}
+                        position="right center"
+                        keepTooltipInside={this.props.popupContainer}
+                        contentStyle={{
+                            padding: "0px",
+                            border: "none",
+                            width: "250px"
+                        }}>
+                        {closefun => (
+                            <div>
+                                {createDivs(normalItems, closefun)}
+                                {this.props.preChoice &&
+                                    createDivs(preChoiceItems, closefun)}
+                                {!this.props.preChoice &&
+                                    createDivs(nonPreChoiceItems, closefun)}
+                                {this.props.preChoice && ( // TODO: remove this special case somehow. Maybe create a confirmation popup component that can be reused?
+                                    <Popup
+                                        trigger={
+                                            <div className="remove popup-item">
+                                                Ta Bort
+                                            </div>
+                                        }
+                                        onClose={closefun}
+                                        modal>
+                                        {closemodal => (
+                                            <div className="modal-main">
+                                                <div>
+                                                    Du kommer att ta bort mer än
+                                                    du antar!
+                                                </div>
+                                                <div
+                                                    className="modal-abort"
+                                                    onClick={closemodal}>
+                                                    avbryt
+                                                </div>
+                                                <div
+                                                    className="modal-accept"
+                                                    onClick={() => {
+                                                        closemodal();
+                                                        runIfExists(
+                                                            this.props.handlers,
+                                                            "deleteNode",
+                                                            this.props
+                                                                .preChoice,
+                                                            this.props.info
+                                                        );
+                                                    }}>
+                                                    ta bort
+                                                </div>
+                                            </div>
+                                        )}
+                                    </Popup>
+                                )}
                             </div>
-                            {!this.props.preChoice && (
-                                <div
-                                    className="popup-item"
-                                    onClick={() => {
-                                        closefun();
-                                        this.props.tree.addNode(
-                                            this.props.info
-                                        );
-                                    }}>
-                                    Lägg till ny fråga under
-                                </div>
-                            )}
-                            <div
-                                className="popup-item"
-                                onClick={() => {
-                                    closefun();
-                                    if (this.props.preChoice) {
-                                        this.props.tree.addNodeToChoice(
-                                            this.props.preChoice
-                                        );
-                                    } else {
-                                        this.props.tree.addChoice(
-                                            this.props.info
-                                        );
-                                    }
-                                }}>
-                                {(this.props.preChoice &&
-                                    "Lägg till nytt svarsalternativ") ||
-                                    "Gör om till fråga med följdfrågor"}
-                            </div>
-                            {this.props.preChoice && (
-                                <div
-                                    className="popup-item"
-                                    onClick={() => {
-                                        closefun();
-                                        this.props.tree.addNode(
-                                            this.props.preChoice
-                                        );
-                                    }}>
-                                    Lägg till fortsättningsfråga
-                                </div>
-                            )}
-                            {!this.props.preChoice && (
-                                <div
-                                    className="remove popup-item"
-                                    onClick={() => {
-                                        closefun();
-                                        this.props.tree.deleteNode(
-                                            this.props.info
-                                        );
-                                    }}>
-                                    Ta bort
-                                </div>
-                            )}
-                            {this.props.preChoice && (
-                                <Popup
-                                    trigger={
-                                        <div className="remove popup-item">
-                                            Ta Bort
-                                        </div>
-                                    }
-                                    onClose={closefun}
-                                    modal>
-                                    {closemodal => (
-                                        <div className="modal-main">
-                                            <div>
-                                                Du kommer att ta bort mer än du
-                                                antar!
-                                            </div>
-                                            <div
-                                                className="modal-abort"
-                                                onClick={closemodal}>
-                                                avbryt
-                                            </div>
-                                            <div
-                                                className="modal-accept"
-                                                onClick={() => {
-                                                    closemodal();
-                                                    this.props.tree.deleteNode(
-                                                        this.props.preChoice,
-                                                        this.props.info
-                                                    );
-                                                }}>
-                                                ta bort
-                                            </div>
-                                        </div>
-                                    )}
-                                </Popup>
-                            )}
-                        </div>
-                    )}
-                </Popup>
+                        )}
+                    </Popup>
+                </div>
+                {/* NOTE: popup-item classes don't work unless they are global for some reason */}
                 <style jsx>{`
                     .square {
                         background: rgb(241,252,255);
                         background: linear-gradient(180deg, rgba(241,252,255,1) 0%, rgba(176,234,255,1) 100%);
-                        width: 100px;
+                        width: ${width}px;
                         height: ${height}px;
                         margin: 10px;
                         position: relative;
+                        padding: 0.3em;
+                        padding-right: 0;
+                        display: flex;
                     }
-                    .text {
-                        width: 100%;
-                        text-align: center;
-                        margin-top: 2%;
+                    .square.focused {
+                        background: #cb60b3;
+                        background: linear-gradient(to bottom, #cb60b3 0%,#ad1283 50%,#de47ac 100%);
+                    }
+                    .dots-container {
                     }
                     .dots {
-                        position: absolute;
-                        height: 100%;
                         line-height: ${height}px;
-                        right: 0;
-                        top: 0;
+                        user-select: none;
+                        z-index: 2;
                     }
                     .dots:hover {
                         cursor: pointer;
                         color: white;
                     }
-                    .popup-item {
+                    .text {
+                        line-height: ${height}px;
+                        text-align: center;
+                        text-overflow: ellipsis;
+                        overflow: hidden;
+                        white-space: nowrap;
+                        user-select: none;
+                        flex-grow: 1;
+                    }
+                    :global(.popup-item) {
                         padding: 0.2em;
                     }
-                    .popup-item:hover {
+                    :global(.popup-item:hover) {
                         background: gainsboro;
                         cursor: pointer;
                     }
-                    .remove {
+                    :global(.remove) {
                         color: red;
                         font-weight: bold;
                     }
@@ -606,82 +734,45 @@ class Lines extends React.Component {
     }
 }
 
-// the main component that keeps the tree state
-export class Tree extends React.Component {
+// the main component that draws the tree.
+// props.tree is the tree to render.
+// props.handlers is an object that contains functions to run when
+// some things are clicked on.
+// props.popupContainer is an CSS selector to an element that popups
+// are going to be inside of.
+export default class Tree extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            tree: null
-        };
         this.treeRootRef = React.createRef();
-    }
-    // remove all nodes from the tree
-    deleteNode(...nodes) {
-        let tree = this.state.tree;
-        for (const n of nodes) {
-            let path = tree.find(n.id);
-            const rem = tree.deleteNode(path);
-            if (rem.length === 0) {
-                tree = null;
-                break;
-            } else {
-                tree = rem[0];
-            }
-        }
-        this.setState({tree: tree});
-    }
-    // adds a new empty node before or after node
-    addNode(node, above = false) {
-        let path = this.state.tree.find(node.id);
-        const add = this.state.tree.insertNode(path, new Node(), above);
-        this.setState({tree: add});
-    }
-    // adds two question choices after node
-    addChoice(node) {
-        let path = this.state.tree.find(node.id);
-        const x = new Choice()
-            .addBranch(new Sequence().addNode(new Node()))
-            .addBranch(new Sequence().addNode(new Node()));
-        const add = this.state.tree.insertNode(path, x, false);
-        this.setState({tree: add});
-    }
-    // adds a new question choice to an existing choice choice
-    addNodeToChoice(choice) {
-        const right = choice.getIdOfLast();
-        let path = this.state.tree.find(right);
-        const x = new Sequence().addNode(new Node());
-        const add = this.state.tree.insertNode(path, x, false);
-        this.setState({tree: add});
-    }
-    // function for the plus button. Adds an empty node last in the
-    // top level
-    addNodeLast() {
-        if (this.state.tree === null) {
-            this.setState({tree: new Sequence().addNode(new Node())});
-        } else {
-            const right = this.state.tree.getIdOfLast();
-            let path = this.state.tree.find(right);
-            const add = this.state.tree.insertNode(path, new Node(), false);
-            this.setState({tree: add});
-        }
     }
     render() {
         return (
             <div className="tree-root" ref={this.treeRootRef}>
-                {this.state.tree && <List sequ={this.state.tree} tree={this} />}
-                {this.state.tree && (
+                {this.props.tree && (
+                    <List
+                        sequ={this.props.tree}
+                        handlers={this.props.handlers}
+                        popupContainer={this.props.popupContainer}
+                    />
+                )}
+                {this.props.tree && (
                     <Lines
-                        lines={this.state.tree.getLines()}
+                        lines={this.props.tree.getLines()}
                         containerRef={this.treeRootRef}
                     />
                 )}
-                <div className="plus" onClick={() => this.addNodeLast()}>
+                <div
+                    className="plus"
+                    onClick={() =>
+                        runIfExists(this.props.handlers, "onClickPlus")
+                    }>
                     +
                 </div>
                 <style jsx>
                     {`
                         .tree-root {
                             position: relative;
+                            display: inline-block;
                         }
                         .plus {
                             width: 94px;
@@ -703,3 +794,76 @@ export class Tree extends React.Component {
         );
     }
 }
+
+// convenience function that searches for a node id
+function idFind(tree, id) {
+    return tree.find(x => x.id === id);
+}
+
+// operations that modifies a Tree. Each function takes the current
+// tree and returns a copy of it with some operation done to it.
+export const operations = {
+    // remove all specified nodes from the tree
+    deleteNode: function(tree, ...nodes) {
+        for (const n of nodes) {
+            let path = idFind(tree, n.id);
+            const rem = tree.deleteNode(path);
+            if (rem.length === 0) {
+                tree = null;
+                break;
+            } else {
+                tree = rem[0];
+            }
+        }
+        return tree;
+    },
+    // adds a new empty node before or after node
+    addNode: function(tree, node, above = false) {
+        let path = idFind(tree, node.id);
+        const add = tree.insertNode(path, new Node(), above);
+        return add;
+    },
+    // adds two question choices after node
+    addChoice: function(tree, node) {
+        let path = idFind(tree, node.id);
+        const x = new Choice()
+            .addBranch(new Sequence().addNode(new Node()))
+            .addBranch(new Sequence().addNode(new Node()));
+        const add = tree.insertNode(path, x, false);
+        return add;
+    },
+    // adds a new question choice to an existing choice choice
+    addNodeToChoice: function(tree, choice) {
+        const right = choice.getIdOfLast();
+        let path = idFind(tree, right);
+        const x = new Sequence().addNode(new Node());
+        const add = tree.insertNode(path, x, false);
+        return add;
+    },
+    // function for the plus button. Adds an empty node last in the
+    // top level
+    addNodeLast: function(tree) {
+        if (tree === null) {
+            return new Sequence().addNode(new Node());
+        } else {
+            const right = tree.getIdOfLast();
+            let path = idFind(tree, right);
+            const add = tree.insertNode(path, new Node(), false);
+            return add;
+        }
+    },
+    // changes the focus to the node current
+    setFocus: function(tree, current) {
+        let prev = tree.find(x => x.focused);
+        if (prev !== null) {
+            tree = tree.modifyNode(prev, {focused: false});
+        }
+        let path = idFind(tree, current.id);
+        return tree.modifyNode(path, {focused: true});
+    },
+    // updates the text on node to text
+    setTextOn: function(tree, node, text) {
+        let path = idFind(tree, node.id);
+        return tree.modifyNode(path, {text});
+    }
+};
