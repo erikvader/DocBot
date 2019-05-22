@@ -129,7 +129,8 @@ class App extends Component {
 
     onSave(e) {
         e.preventDefault();
-        console.log(this.state.contractName);
+        // NOTE: temporary debug print
+        console.log(this.state.tree);
     }
 
     render() {
