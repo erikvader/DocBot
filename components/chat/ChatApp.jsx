@@ -23,17 +23,19 @@ class ChatApp extends React.Component {
         this.socket = new WebSocket("ws://localhost:1337");
 
         // Connection is established with server
-        this.socket.onopen = event => {
-        };
+        this.socket.onopen = event => {};
 
         // Receiving messages from server
         this.socket.onmessage = event => {
-            let message = event.data;
+            let messages = JSON.parse(event.data);
 
-
-            this.addMessage({
-                username: "Anna",
-                message
+            let i = 0;
+            messages.forEach(message => {
+                this.addMessage({
+                    username: i === 0 ? "Anna" : "",
+                    message
+                });
+                i += 1;
             });
         };
     }

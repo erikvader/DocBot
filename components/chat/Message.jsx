@@ -21,7 +21,7 @@ class Message extends React.Component {
                         color: white;
                     }
                     .message {
-                        margin-bottom: 20px;
+                        margin-bottom: 8px;
                     }
                     .message-body {
                         max-width: 80%;
@@ -29,7 +29,7 @@ class Message extends React.Component {
                         padding: 10px 12px;
                         background-color: #eee;
                         border: 1px;
-                        border-radius: 5px;
+                        border-radius: 15px;
                     }
                     .username {
                         font-weight: bold;

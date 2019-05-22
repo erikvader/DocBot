@@ -71,7 +71,7 @@ function queryAssistant(text = null, context = null) {
         assistant
             .message(params)
             .then(response => {
-                let answer = response.output.text[0];
+                let answer = JSON.stringify(response.output.text);
                 let context = response.context;
                 resolve({answer, context});
             })
