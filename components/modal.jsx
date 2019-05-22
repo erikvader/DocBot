@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import Modal from "react-modal";
 import Link from "next/link";
+import Router from "next/router";
 
 const customStyles = {
     content: {
@@ -15,18 +16,24 @@ const customStyles = {
     }
 };
 
-const placementStyle = {
+const placementStyle_1 = {
     padding: "4%",
-    paddingLeft: "30%",
     float: "left"
 };
 
-class AdminBackbutton extends React.Component {
+const placementStyle_2 = {
+    padding: "4%",
+    paddingLeft: "30%",
+    float: "right"
+};
+
+class AdminModal extends React.Component {
     constructor() {
         super();
 
         this.state = {
-            modalIsOpen: false
+            modalIsOpen: false,
+            textMessage: "det här är en text som är bra"
         };
 
         this.openModal = this.openModal.bind(this);
@@ -52,20 +59,17 @@ class AdminBackbutton extends React.Component {
                     onRequestClose={this.closeModal}
                     style={customStyles}>
                     <div>
-                        <div>
-                            Är du säker på att du vill lämna vyn? Alla osparade
-                            ändringar kommer gå förlorade.
-                        </div>
+                        <div>{this.props.textModal}</div>
 
-                        <div style={placementStyle}>
-                            <Link href="/admin">
-                                <a id="Yes" className="buttonStyle">
-                                    {" "}
-                                    JA
-                                </a>
-                            </Link>
+                        <div style={placementStyle_1}>
+                            <a
+                                id="Yes"
+                                className="buttonStyle"
+                                onClick={() => this.props.funcToYes()}>
+                                JA
+                            </a>
                         </div>
-                        <div style={placementStyle}>
+                        <div style={placementStyle_2}>
                             <button
                                 id="No"
                                 className="buttonStyle"
@@ -91,9 +95,11 @@ class AdminBackbutton extends React.Component {
                         }
                           .buttonStyle#No {
                                 background-color: red;
+                                float: left;
                         }
                           .buttonStyle#Yes {
                                 background-color: green;
+                                float: right;
                         }
                           `}
                     </style>

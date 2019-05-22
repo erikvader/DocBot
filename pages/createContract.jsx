@@ -1,7 +1,9 @@
 import React, {Component} from "react";
 import Link from "next/link";
-import AdminBackbutton from "../components/modal";
+
 import Tree, {operations} from "../components/Tree";
+import AdminModal from "../components/modal";
+import Router from "next/router";
 
 // TODO: make the option fritext only be available if a question is
 //       NOT a branching question
@@ -237,7 +239,7 @@ class App extends Component {
         return (
             <div className="root">
                 <div className="menu">
-                    <AdminBackbutton />
+                    <AdminModal />
                     <input
                         name="contractName"
                         value={this.state.contractName}
