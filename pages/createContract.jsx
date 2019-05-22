@@ -2,10 +2,7 @@ import React, {Component} from "react";
 import Link from "next/link";
 import AdminModal from "../components/modal";
 import Router from "next/router";
-
 import Tree, {operations} from "../components/Tree";
-import AdminModal from "../components/modal";
-import Router from "next/router";
 
 // TODO: make the option fritext only be available if a question is
 //       NOT a branching question
@@ -248,7 +245,7 @@ class App extends Component {
             <div className="root">
                 <div className="menu">
                     <AdminModal
-                        textModal="det här är ett text meddelande"
+                        textModal="det här är ett annat och finare text meddelande"
                         funcToYes={this.onYes}
                     />
                     <input

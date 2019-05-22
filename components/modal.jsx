@@ -16,12 +16,13 @@ const customStyles = {
     }
 };
 
-const placementStyle_1 = {
+/*Placement for Yes button*/
+const style_yes_button = {
     padding: "4%",
     float: "left"
 };
 
-const placementStyle_2 = {
+const style_no_button = {
     padding: "4%",
     paddingLeft: "30%",
     float: "right"
@@ -61,7 +62,7 @@ class AdminModal extends React.Component {
                     <div>
                         <div>{this.props.textModal}</div>
 
-                        <div style={placementStyle_1}>
+                        <div style={style_yes_button}>
                             <a
                                 id="Yes"
                                 className="buttonStyle"
@@ -69,7 +70,7 @@ class AdminModal extends React.Component {
                                 JA
                             </a>
                         </div>
-                        <div style={placementStyle_2}>
+                        <div style={style_no_button}>
                             <button
                                 id="No"
                                 className="buttonStyle"
