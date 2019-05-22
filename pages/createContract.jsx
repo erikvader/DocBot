@@ -1,5 +1,7 @@
 import React, {Component} from "react";
 import Link from "next/link";
+import AdminModal from "../components/modal";
+import Router from "next/router";
 
 import Tree, {operations} from "../components/Tree";
 import AdminModal from "../components/modal";
@@ -135,6 +137,11 @@ class App extends Component {
         console.log(this.state.tree);
     }
 
+    onYes = () => {
+        console.log("det funkar");
+        Router.push("/admin");
+    };
+
     render() {
         // figure out what elements to include in .options
         let optionsBox = [];
@@ -236,10 +243,14 @@ class App extends Component {
                 }
             }
         }
+
         return (
             <div className="root">
                 <div className="menu">
-                    <AdminModal />
+                    <AdminModal
+                        textModal="det här är ett text meddelande"
+                        funcToYes={this.onYes}
+                    />
                     <input
                         name="contractName"
                         value={this.state.contractName}

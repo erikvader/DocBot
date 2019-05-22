@@ -109,4 +109,4 @@ class AdminModal extends React.Component {
     }
 }
 
-export default AdminBackbutton;
+export default AdminModal;
