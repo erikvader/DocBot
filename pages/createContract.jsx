@@ -1,6 +1,5 @@
 import React, {Component} from "react";
 import Link from "next/link";
-import Form from "../components/form";
 import AdminBackbutton from "../components/modal";
 import Tree, {operations} from "../components/Tree";
 
