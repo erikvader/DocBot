@@ -249,6 +249,8 @@ class App extends Component {
             <div className="root">
                 <div className="menu">
                     <AdminModal
+                        yesText="Ja"
+                        noText="Nej"
                         textModal="Är du säker på att du vill lämna den här vyn? Alla osparade ändringar kommer gå förlorade."
                         funcToYes={this.onYes}
                     />

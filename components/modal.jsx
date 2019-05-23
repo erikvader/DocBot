@@ -27,7 +27,18 @@ const style_no_button = {
     paddingLeft: "30%",
     float: "right"
 };
+/* A modal component is implemented using
 
+<AdminModal
+    yesText = string parameter connected to yes condition
+    noText =  string parameter connected to no condition
+    textModal = string parameter connected what message the modal want to deliver
+    funcToYes= function to be run on yes, is implemented in calling file, example is {this.onYes}
+/>
+
+No always closes the window no action taken.
+
+ */
 class AdminModal extends React.Component {
     constructor() {
         super();
@@ -67,7 +78,7 @@ class AdminModal extends React.Component {
                                 id="Yes"
                                 className="buttonStyle"
                                 onClick={() => this.props.funcToYes()}>
-                                JA
+                                {this.props.yesText}
                             </a>
                         </div>
                         <div style={style_no_button}>
@@ -75,7 +86,7 @@ class AdminModal extends React.Component {
                                 id="No"
                                 className="buttonStyle"
                                 onClick={this.closeModal}>
-                                NEJ
+                                {this.props.noText}
                             </button>
                         </div>
                     </div>
