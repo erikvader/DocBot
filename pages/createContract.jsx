@@ -5,27 +5,13 @@ import Tree, {operations} from "../components/Tree";
 
 // TODO: make the option fritext only be available if a question is
 //       NOT a branching question
-// TODO: some input data in infos are still present even if they don't
-//       apply anymore (for example if a node isn't after a branch question anymore)
 class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            infos: {}, // the value of all input fields for all nodes
             tree: null, // the current tree
             focused: null, // the focused element in tree
-            focusedBranch: null, // the parent question node if focused is the beginning of a branch
-            focusedPreChoice: null, //the Choice node (if there is one) following focused
             contractName: ""
-        };
-
-        this.infosDefaults = {
-            nodeQuestion: "",
-            nodeQuestionType: "text",
-            prevYesNo: "yes",
-            prevNumber1: 0,
-            prevNumber2: 0,
-            prevNumberOperator: "="
         };
 
         // take all pure functions in Tree.operations and convert them
@@ -33,9 +19,13 @@ class App extends Component {
         this.operations = {};
         for (const [name, fun] of Object.entries(operations)) {
             this.operations[name] = (...args) =>
-                this.setState((oldState, props) => ({
-                    tree: fun.call(null, oldState.tree, ...args)
-                }));
+                this.setState((oldState, props) => {
+                    const newTree = fun.call(null, oldState.tree, ...args);
+                    return {
+                        tree: newTree,
+                        focused: newTree.find(x => x.focused)
+                    };
+                });
         }
         this.operations["onClickPlus"] = this.operations["addNodeLast"];
         this.operations["squareClick"] = node => {
@@ -43,48 +33,46 @@ class App extends Component {
         };
     }
 
-    // function to run everytime tree in state changes
-    treeUpdateHook() {
-        // update node text to match input field
-        const oldFocused = this.state.focused;
-        if (oldFocused) {
-            const curQuestion = this.getInputValue("nodeQuestion");
-            if (oldFocused.text !== curQuestion) {
-                this.operations.setTextOn(oldFocused, curQuestion);
-                this.setState({focused: null});
-                return;
-            }
+    // returns the branch node of the focused one
+    isFocusedBranch() {
+        if (!this.state.focused) {
+            return null;
         }
-
-        // search and find the currently focused node and save it in
-        // state.
-        let newFocused = null;
-        let focusedBranch = null;
-        let focusedPreChoice = null;
-        if (this.state.tree) {
-            let path = this.state.tree.find(x => x.focused);
-            if (path) {
-                newFocused = path[path.length - 1];
-                focusedBranch = this.state.tree.getBranchParent(path.slice());
-                focusedPreChoice = this.state.tree.isPreChoice(path.slice());
-            }
+        return this.state.tree.getBranchParent(this.state.focused.slice());
+    }
+    // returns the Choice that comes after focused
+    isFocusedPreChoice() {
+        if (!this.state.focused) {
+            return null;
         }
-        this.setState({
-            focused: newFocused,
-            focusedBranch,
-            focusedPreChoice
-        });
+        return this.state.tree.isPreChoice(this.state.focused.slice());
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        if (prevState.tree !== this.state.tree) {
-            this.treeUpdateHook();
-        }
-    }
+    // // function to run everytime tree in state changes
+    // treeUpdateHook() {
+    //     // search and find the currently focused node and save it in
+    //     // state.
+    //     let newFocused = null;
+    //     if (this.state.tree) {
+    //         let path = this.state.tree.find(x => x.focused);
+    //         if (path) {
+    //             newFocused = path;
+    //         }
+    //     }
+    //     this.setState({
+    //         focused: newFocused
+    //     });
+    // }
 
-    componentDidMount() {
-        this.treeUpdateHook();
-    }
+    // componentDidUpdate(prevProps, prevState) {
+    //     if (prevState.tree !== this.state.tree) {
+    //         this.treeUpdateHook();
+    //     }
+    // }
+
+    // componentDidMount() {
+    //     this.treeUpdateHook();
+    // }
 
     // store/change data for the currently focused node
     handleNodeInput(event) {
@@ -95,36 +83,18 @@ class App extends Component {
         if (!focused) {
             return;
         }
-        focused = focused.id;
-
-        let old;
-        if (focused in this.state.infos) {
-            old = Object.assign({}, this.state.infos[focused]);
-        } else {
-            old = {};
-        }
-
-        old[name] = value;
-
-        this.setState((state, props) => {
-            const res = Object.assign({}, state.infos, {[focused]: old});
-            console.log(res);
-            return {infos: res};
-        });
+        this.operations.modifyNode(focused.slice(), {[name]: value});
     }
 
     // retreive input data from the currently focused node.
     getInputValue(name, node) {
+        let path;
         if (node === undefined) {
-            node = this.state.focused;
+            path = this.state.focused.slice();
+        } else {
+            path = this.state.tree.find(x => x === node);
         }
-        if (node && node.id in this.state.infos) {
-            const cur = this.state.infos[node.id];
-            if (name in cur) {
-                return cur[name];
-            }
-        }
-        return this.infosDefaults[name];
+        return this.state.tree.get(path)[name];
     }
 
     onSave(e) {
@@ -161,10 +131,11 @@ class App extends Component {
                 </div>
             );
 
-            if (this.state.focusedBranch) {
+            const focusedBranch = this.isFocusedBranch();
+            if (focusedBranch) {
                 const qtype = this.getInputValue(
                     "nodeQuestionType",
-                    this.state.focusedBranch
+                    focusedBranch
                 );
                 if (qtype === "yesno") {
                     optionsBox.push(
@@ -220,15 +191,21 @@ class App extends Component {
                                 value={this.getInputValue("prevNumber1")}
                             />
                             {this.getInputValue("prevNumberOperator") ===
-                                "between" && [
-                                "och",
-                                <input
-                                    type="number"
-                                    name="prevNumber2"
-                                    onChange={this.handleNodeInput.bind(this)}
-                                    value={this.getInputValue("prevNumber2")}
-                                />
-                            ]}
+                                "between" && (
+                                <span>
+                                    och
+                                    <input
+                                        type="number"
+                                        name="prevNumber2"
+                                        onChange={this.handleNodeInput.bind(
+                                            this
+                                        )}
+                                        value={this.getInputValue(
+                                            "prevNumber2"
+                                        )}
+                                    />
+                                </span>
+                            )}
                         </div>
                     );
                 }
