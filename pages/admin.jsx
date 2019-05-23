@@ -9,7 +9,7 @@ const scrollStyle = {
     float: "right",
     width: "69%",
     height: "90vh",
-    background: "#FAF8F8"
+    background: "rgba(255,255,255,0.3)"
 };
 
 /* Styling of scrol menu overhead*/
@@ -58,7 +58,7 @@ class Admin extends Component {
     render() {
         return (
             <Layout>
-                <div>
+                <div className="root">
                     <div style={headerStyling}>
                         <div>
                             <h3 style={header_1}> Namn</h3>
@@ -86,6 +86,20 @@ class Admin extends Component {
                             })}
                         </ul>
                     </div>
+                    <style jsx>
+                        {`
+                            .root {
+                                height: 100vh;
+                                width: 100vw;
+                                padding: 0.5%;
+                                background-image: linear-gradient(
+                                    -45deg,
+                                    lightskyblue,
+                                    white
+                                );
+                            }
+                        `}
+                    </style>
                 </div>
             </Layout>
         );

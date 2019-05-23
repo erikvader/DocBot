@@ -17,7 +17,7 @@ class App extends Component {
             focused: null, // the focused element in tree
             focusedBranch: null, // the parent question node if focused is the beginning of a branch
             focusedPreChoice: null, //the Choice node (if there is one) following focused
-            contractName: ""
+            contractName: "Avtalsnamn"
         };
 
         this.infosDefaults = {
@@ -135,11 +135,15 @@ class App extends Component {
     }
 
     onYes = () => {
-        console.log("det funkar");
         Router.push("/admin");
     };
 
     render() {
+        let boxClass = ["optionsClass"];
+        if (this.state.focused) {
+            console.log("fokuserad");
+            boxClass.push("active");
+        }
         // figure out what elements to include in .options
         let optionsBox = [];
         if (this.state.focused) {
@@ -245,16 +249,18 @@ class App extends Component {
             <div className="root">
                 <div className="menu">
                     <AdminModal
-                        textModal="det här är ett annat och finare text meddelande"
+                        textModal="Är du säker på att du vill lämna den här vyn? Alla osparade ändringar kommer gå förlorade."
                         funcToYes={this.onYes}
                     />
                     <input
+                        className="upperLeftCorner"
                         name="contractName"
                         value={this.state.contractName}
                         onChange={e =>
                             this.setState({[e.target.name]: e.target.value})
                         }
                     />
+                    <br />
                     <div className="tree">
                         <Tree
                             tree={this.state.tree}
@@ -262,9 +268,15 @@ class App extends Component {
                             popupContainer={".tree"}
                         />
                     </div>
-                    <button onClick={this.onSave.bind(this)}>Spara</button>
+                    <div>
+                        <button
+                            className="saveButtonStyle"
+                            onClick={this.onSave.bind(this)}>
+                            Spara
+                        </button>
+                    </div>
                 </div>
-                <div className="options">{optionsBox}</div>
+                <div className={boxClass.join(" ")}>{optionsBox}</div>
                 <style jsx>
                     {`
                         :global(body) {
@@ -278,6 +290,11 @@ class App extends Component {
                             height: 100vh;
                             width: 100vw;
                             padding: 0.5%;
+                            background-image: linear-gradient(
+                                -45deg,
+                                rgb(135, 206, 250, 0.5),
+                                white
+                            );
                         }
                         .menu {
                             position: relative;
@@ -285,24 +302,50 @@ class App extends Component {
                             width: 50%;
                             padding: 1%;
                             height: 100%;
-                            border: solid;
                             display: flex;
                             flex-direction: column;
                         }
                         .tree {
                             position: relative;
-                            height: 100%;
-                            border: solid;
+                            height: 90%;
+                            border-style: inset;
+                            border: 2px solid F0EFEF;
+                            border-radius: 25px;
                             padding: 0.5%;
                             overflow-x: auto;
                             overflow-y: scroll;
                         }
-                        .options {
+                        .optionsClass {
                             float: left;
                             width: 50%;
                             padding: 1%;
                             height: 100%;
-                            border: solid;
+                            background-color: transparent;
+                            border-radius: 10px 10px 10px 1000px;
+                        }
+
+                        .optionsClass.active {
+                            background-image: linear-gradient(
+                                -45deg,
+                                skyblue,
+                                white
+                            );
+                        }
+                        .upperLeftCorner {
+                            display: inline-block;
+                            position: absolute;
+                            padding: 1%;
+                            right: 1%;
+                            top: 1%;
+                        }
+
+                        .saveButtonStyle {
+                            position: absolute;
+                            left: 1%;
+                            bottom: 2%;
+                        }
+                        .input:hover {
+                            border: #ccc;
                         }
                     `}
                 </style>

@@ -529,10 +529,11 @@ class Square extends React.Component {
                         padding: 0.3em;
                         padding-right: 0;
                         display: flex;
+                        border-radius: 5px;
                     }
                     .square.focused {
                         background: #cb60b3;
-                        background: linear-gradient(to bottom, #cb60b3 0%,#ad1283 50%,#de47ac 100%);
+                        background: linear-gradient(to bottom,#6085cb  0%,#1226ad 50%,#4656de 100%);
                     }
                     .dots-container {
                     }
@@ -587,6 +588,7 @@ class Square extends React.Component {
                        cursor: pointer;
                        background: gainsboro;
                     }
+
                 `}</style>
             </div>
         );
@@ -778,6 +780,7 @@ export default class Tree extends React.Component {
                             width: 94px;
                             height: 25px;
                             border: 3px dotted black;
+                            border-radius: 5px;
                             line-height: 25px;
                             text-align: center;
                             font-size: 25px;
