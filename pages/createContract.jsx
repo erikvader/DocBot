@@ -141,7 +141,6 @@ class App extends Component {
     render() {
         let boxClass = ["optionsClass"];
         if (this.state.focused) {
-            console.log("fokuserad");
             boxClass.push("active");
         }
         // figure out what elements to include in .options
@@ -249,6 +248,7 @@ class App extends Component {
             <div className="root">
                 <div className="menu">
                     <AdminModal
+                        modalName="Tillbaka"
                         yesText="Ja"
                         noText="Nej"
                         textModal="Är du säker på att du vill lämna den här vyn? Alla osparade ändringar kommer gå förlorade."

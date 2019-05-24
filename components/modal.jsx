@@ -30,6 +30,7 @@ const style_no_button = {
 /* A modal component is implemented using
 
 <AdminModal
+    modalName = string parameter connected to the display button of the modal
     yesText = string parameter connected to yes condition
     noText =  string parameter connected to no condition
     textModal = string parameter connected what message the modal want to deliver
@@ -63,7 +64,7 @@ class AdminModal extends React.Component {
     render() {
         return (
             <div>
-                <button onClick={this.openModal}>Tillbaka</button>
+                <button onClick={this.openModal}>{this.props.modalName}</button>
 
                 <Modal
                     ariaHideApp={false}
