@@ -8,6 +8,7 @@ const api = express.Router();
 
 // Modules
 const contract = require("./contract");
+const entity = require("./entity");
 const db = require("./db");
 
 // check if server is up
@@ -28,5 +29,10 @@ api.post("/contract/create", contract.create);
 api.post("/contract/delete", contract.delete);
 api.post("/contract/edit/name", contract.changeName);
 api.post("/contract/edit/condition", contract.changeCondition);
+
+api.get("/entity/get", entity.get);
+api.post("/entity/create", entity.create);
+api.post("/entity/delete", entity.delete);
+
 
 module.exports = api;
