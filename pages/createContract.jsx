@@ -48,32 +48,6 @@ class App extends Component {
         return this.state.tree.isPreChoice(this.state.focused.slice());
     }
 
-    // // function to run everytime tree in state changes
-    // treeUpdateHook() {
-    //     // search and find the currently focused node and save it in
-    //     // state.
-    //     let newFocused = null;
-    //     if (this.state.tree) {
-    //         let path = this.state.tree.find(x => x.focused);
-    //         if (path) {
-    //             newFocused = path;
-    //         }
-    //     }
-    //     this.setState({
-    //         focused: newFocused
-    //     });
-    // }
-
-    // componentDidUpdate(prevProps, prevState) {
-    //     if (prevState.tree !== this.state.tree) {
-    //         this.treeUpdateHook();
-    //     }
-    // }
-
-    // componentDidMount() {
-    //     this.treeUpdateHook();
-    // }
-
     // store/change data for the currently focused node
     handleNodeInput(event) {
         const value = event.target.value;
