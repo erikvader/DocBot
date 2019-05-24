@@ -294,7 +294,7 @@ class App extends Component {
                             padding: 0.5%;
                             background-image: linear-gradient(
                                 -45deg,
-                                rgb(135, 206, 250, 0.5),
+                                rgb(135, 206, 250),
                                 white
                             );
                         }
@@ -316,6 +316,7 @@ class App extends Component {
                             padding: 0.5%;
                             overflow-x: auto;
                             overflow-y: scroll;
+                            background: white;
                         }
                         .optionsClass {
                             float: left;

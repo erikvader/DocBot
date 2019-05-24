@@ -349,6 +349,8 @@ class List extends React.Component {
                         .list-container {
                             display: flex;
                             flex-direction: column;
+                            position: relative;
+                            z-index: 1;
                         }
                     `}
                 </style>
@@ -727,7 +729,6 @@ class Lines extends React.Component {
                             position: absolute;
                             top: 0px;
                             left: 0px;
-                            z-index: -1;
                         }
                     `}
                 </style>
@@ -786,6 +787,8 @@ export default class Tree extends React.Component {
                             font-size: 25px;
                             margin-left: 10px;
                             user-select: none;
+                            position: relative;
+                            z-index: 1;
                         }
                         .plus:hover {
                             background: lime;
