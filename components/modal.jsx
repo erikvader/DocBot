@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import Modal from "react-modal";
 import Link from "next/link";
+import Router from "next/router";
 
 const customStyles = {
     content: {
@@ -15,18 +16,37 @@ const customStyles = {
     }
 };
 
-const placementStyle = {
+/*Placement for Yes button*/
+const style_yes_button = {
     padding: "4%",
-    paddingLeft: "30%",
     float: "left"
 };
 
-class AdminBackbutton extends React.Component {
+const style_no_button = {
+    padding: "4%",
+    paddingLeft: "30%",
+    float: "right"
+};
+/* A modal component is implemented using
+
+<AdminModal
+    modalName = string parameter connected to the display button of the modal
+    yesText = string parameter connected to yes condition
+    noText =  string parameter connected to no condition
+    textModal = string parameter connected what message the modal want to deliver
+    funcToYes= function to be run on yes, is implemented in calling file, example is {this.onYes}
+/>
+
+No always closes the window no action taken.
+
+ */
+class AdminModal extends React.Component {
     constructor() {
         super();
 
         this.state = {
-            modalIsOpen: false
+            modalIsOpen: false,
+            textMessage: "det här är en text som är bra"
         };
 
         this.openModal = this.openModal.bind(this);
@@ -44,7 +64,7 @@ class AdminBackbutton extends React.Component {
     render() {
         return (
             <div>
-                <button onClick={this.openModal}>Tillbaka</button>
+                <button onClick={this.openModal}>{this.props.modalName}</button>
 
                 <Modal
                     ariaHideApp={false}
@@ -52,25 +72,22 @@ class AdminBackbutton extends React.Component {
                     onRequestClose={this.closeModal}
                     style={customStyles}>
                     <div>
-                        <div>
-                            Är du säker på att du vill lämna vyn? Alla osparade
-                            ändringar kommer gå förlorade.
-                        </div>
+                        <div>{this.props.textModal}</div>
 
-                        <div style={placementStyle}>
-                            <Link href="/admin">
-                                <a id="Yes" className="buttonStyle">
-                                    {" "}
-                                    JA
-                                </a>
-                            </Link>
+                        <div style={style_yes_button}>
+                            <a
+                                id="Yes"
+                                className="buttonStyle"
+                                onClick={() => this.props.funcToYes()}>
+                                {this.props.yesText}
+                            </a>
                         </div>
-                        <div style={placementStyle}>
+                        <div style={style_no_button}>
                             <button
                                 id="No"
                                 className="buttonStyle"
                                 onClick={this.closeModal}>
-                                NEJ
+                                {this.props.noText}
                             </button>
                         </div>
                     </div>
@@ -91,9 +108,11 @@ class AdminBackbutton extends React.Component {
                         }
                           .buttonStyle#No {
                                 background-color: red;
+                                float: left;
                         }
                           .buttonStyle#Yes {
                                 background-color: green;
+                                float: right;
                         }
                           `}
                     </style>
@@ -103,4 +122,4 @@ class AdminBackbutton extends React.Component {
     }
 }
 
-export default AdminBackbutton;
+export default AdminModal;

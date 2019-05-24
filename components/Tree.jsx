@@ -363,6 +363,8 @@ class List extends React.Component {
                         .list-container {
                             display: flex;
                             flex-direction: column;
+                            position: relative;
+                            z-index: 1;
                         }
                     `}
                 </style>
@@ -543,10 +545,11 @@ class Square extends React.Component {
                         padding: 0.3em;
                         padding-right: 0;
                         display: flex;
+                        border-radius: 5px;
                     }
                     .square.focused {
                         background: #cb60b3;
-                        background: linear-gradient(to bottom, #cb60b3 0%,#ad1283 50%,#de47ac 100%);
+                        background: linear-gradient(to bottom,#6085cb  0%,#1226ad 50%,#4656de 100%);
                     }
                     .dots-container {
                     }
@@ -601,6 +604,7 @@ class Square extends React.Component {
                        cursor: pointer;
                        background: gainsboro;
                     }
+
                 `}</style>
             </div>
         );
@@ -739,7 +743,6 @@ class Lines extends React.Component {
                             position: absolute;
                             top: 0px;
                             left: 0px;
-                            z-index: -1;
                         }
                     `}
                 </style>
@@ -792,11 +795,14 @@ export default class Tree extends React.Component {
                             width: 94px;
                             height: 25px;
                             border: 3px dotted black;
+                            border-radius: 5px;
                             line-height: 25px;
                             text-align: center;
                             font-size: 25px;
                             margin-left: 10px;
                             user-select: none;
+                            position: relative;
+                            z-index: 1;
                         }
                         .plus:hover {
                             background: lime;
