@@ -25,11 +25,16 @@ function runIfExists(obj, funname, ...funargs) {
 // the leaf nodes of the tree. This is the thing that contains all
 // data from the backend including what question to ask.
 export class Node {
-    constructor(text = "") {
+    constructor() {
         this.id = global_id;
         global_id++;
-        this.text = text;
         this.focused = false;
+        this.nodeQuestion = "";
+        this.nodeQuestionType = "text";
+        this.prevYesNo = "yes";
+        this.prevNumber1 = 0;
+        this.prevNumber2 = 0;
+        this.prevNumberOperator = "=";
     }
     // see Sequence.getHeight
     getHeight() {
@@ -60,6 +65,10 @@ export class Node {
     getBranchParent(path) {
         path.shift();
         return null;
+    }
+    get(path) {
+        path.shift();
+        return this;
     }
 }
 
@@ -237,6 +246,11 @@ export class Sequence {
             return this.list[ind - 1];
         }
         return this.list[ind].getBranchParent(path);
+    }
+    get(path) {
+        path.shift();
+        const ind = this.list.findIndex(x => path[0] === x);
+        return this.list[ind].get(path);
     }
 }
 
@@ -455,7 +469,7 @@ class Square extends React.Component {
                         this.props.info
                     )
                 }>
-                <div className="text">{this.props.info.text}</div>
+                <div className="text">{this.props.info.nodeQuestion}</div>
                 <div
                     className="dots-container"
                     onClick={e => e.stopPropagation()}>
@@ -861,9 +875,7 @@ export const operations = {
         let path = idFind(tree, current.id);
         return tree.modifyNode(path, {focused: true});
     },
-    // updates the text on node to text
-    setTextOn: function(tree, node, text) {
-        let path = idFind(tree, node.id);
-        return tree.modifyNode(path, {text});
+    modifyNode: function(tree, path, mods) {
+        return tree.modifyNode(path, mods);
     }
 };
