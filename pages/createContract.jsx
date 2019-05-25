@@ -1,8 +1,8 @@
 import React, {Component} from "react";
 import Link from "next/link";
-import AdminModal from "../components/modal";
+import AdminModal from "../components/admin/modal";
 import Router from "next/router";
-import Tree, {operations} from "../components/Tree";
+import Tree, {operations} from "../components/admin/Tree";
 
 // TODO: make the option fritext only be available if a question is
 //       NOT a branching question
@@ -91,9 +91,16 @@ class App extends Component {
         let optionsBox = [];
         if (this.state.focused) {
             optionsBox.push(
-                <div key="question">
-                    Fråga:
+                <div
+                    style={{
+                        margin: "auto",
+                        width: "50%"
+                    }}
+                    key="question">
+                    Skriv din frågetext nedan:
+                    <br />
                     <textarea
+                        style={{width: "100%", height: "15vh"}}
                         value={this.getInputValue("nodeQuestion")}
                         name="nodeQuestion"
                         onChange={this.handleNodeInput.bind(this)}
@@ -101,8 +108,15 @@ class App extends Component {
                 </div>
             );
             optionsBox.push(
-                <div key="expectedans">
-                    Förväntat svar:
+                <div
+                    style={{
+                        paddingTop: "3%",
+                        margin: "auto",
+                        width: "50%"
+                    }}
+                    key="expectedans">
+                    Vilken typ av svar förväntas på den här frågan?:
+                    <br />
                     <select
                         onChange={this.handleNodeInput.bind(this)}
                         value={this.getInputValue("nodeQuestionType")}
@@ -122,7 +136,13 @@ class App extends Component {
                 );
                 if (qtype === "yesno") {
                     optionsBox.push(
-                        <div key={qtype}>
+                        <div
+                            style={{
+                                paddingTop: "3%",
+                                margin: "auto",
+                                width: "50%"
+                            }}
+                            key={qtype}>
                             Krav på föregående:
                             <br />
                             <input
@@ -214,6 +234,20 @@ class App extends Component {
                         }
                     />
                     <br />
+
+                    <div style={{margin: "auto", paddingBottom: "0"}}>
+                        <select style={{marginRight: "100px"}} name="Avsikt">
+                            <option value="movetogether">Flytta ihop</option>
+                            <option value="cohabitant">Inneboende</option>
+                            <option value="sellcontact">Köpeavtal</option>
+                        </select>
+                        <select name="Entitet">
+                            <option value="partner">Partner</option>
+                            <option value="cohabitant">Inneboende</option>
+                            <option value="item">Föremål</option>
+                        </select>
+                    </div>
+                    <br />
                     <div className="tree">
                         <Tree
                             tree={this.state.tree}
@@ -294,7 +328,7 @@ class App extends Component {
                         }
 
                         .saveButtonStyle {
-                            position: absolute;
+                            position: relative;
                             left: 1%;
                             bottom: 2%;
                         }
