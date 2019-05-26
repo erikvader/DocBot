@@ -28,10 +28,7 @@ class App extends Component {
                     };
                 });
         }
-        this.operations["onClickPlus"] = this.operations["addNodeLast"];
-        this.operations["squareClick"] = node => {
-            this.operations.setFocus(node);
-        };
+        this.operations["onClickPlus"] = this.operations.addNodeLast;
     }
 
     // returns the branch node of the focused one
