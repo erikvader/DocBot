@@ -363,8 +363,6 @@ class List extends React.Component {
                         .list-container {
                             display: flex;
                             flex-direction: column;
-                            position: relative;
-                            z-index: 1;
                         }
                     `}
                 </style>
@@ -556,7 +554,6 @@ class Square extends React.Component {
                     .dots {
                         line-height: ${height}px;
                         user-select: none;
-                        z-index: 2;
                     }
                     .dots:hover {
                         cursor: pointer;
@@ -765,28 +762,34 @@ export default class Tree extends React.Component {
     render() {
         return (
             <div className="tree-root" ref={this.treeRootRef}>
-                {this.props.tree && (
-                    <List
-                        sequ={this.props.tree}
-                        handlers={this.props.handlers}
-                        popupContainer={this.props.popupContainer}
-                    />
-                )}
+                <div className="not-lines">
+                    {this.props.tree && (
+                        <List
+                            sequ={this.props.tree}
+                            handlers={this.props.handlers}
+                            popupContainer={this.props.popupContainer}
+                        />
+                    )}
+                    <div
+                        className="plus"
+                        onClick={() =>
+                            runIfExists(this.props.handlers, "onClickPlus")
+                        }>
+                        +
+                    </div>
+                </div>
                 {this.props.tree && (
                     <Lines
                         lines={this.props.tree.getLines()}
                         containerRef={this.treeRootRef}
                     />
                 )}
-                <div
-                    className="plus"
-                    onClick={() =>
-                        runIfExists(this.props.handlers, "onClickPlus")
-                    }>
-                    +
-                </div>
                 <style jsx>
                     {`
+                        .not-lines {
+                            position: relative;
+                            z-index: 1;
+                        }
                         .tree-root {
                             position: relative;
                             display: inline-block;
@@ -801,8 +804,6 @@ export default class Tree extends React.Component {
                             font-size: 25px;
                             margin-left: 10px;
                             user-select: none;
-                            position: relative;
-                            z-index: 1;
                         }
                         .plus:hover {
                             background: lime;
