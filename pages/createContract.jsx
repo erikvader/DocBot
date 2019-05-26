@@ -24,7 +24,7 @@ class App extends Component {
                     const newTree = fun.call(null, oldState.tree, ...args);
                     return {
                         tree: newTree,
-                        focused: newTree.find(x => x.focused)
+                        focused: newTree && newTree.find(x => x.focused)
                     };
                 });
         }
