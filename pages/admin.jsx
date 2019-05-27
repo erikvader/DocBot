@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Layout from "../components/Layout";
-import ScrollMenu from "../components/scrollMenu";
+import Layout from "../components/admin/Layout";
+import ScrollMenu from "../components/admin/scrollMenu";
 import React, {Component} from "react";
 
 /* styling for ScrollMenu*/

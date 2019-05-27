@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Menu from "../components/Layout";
+import Menu from "../components/admin/Layout";
 
 export default function Index() {
     return (
