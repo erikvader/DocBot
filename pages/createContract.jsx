@@ -24,14 +24,11 @@ class App extends Component {
                     const newTree = fun.call(null, oldState.tree, ...args);
                     return {
                         tree: newTree,
-                        focused: newTree.find(x => x.focused)
+                        focused: newTree && newTree.find(x => x.focused)
                     };
                 });
         }
-        this.operations["onClickPlus"] = this.operations["addNodeLast"];
-        this.operations["squareClick"] = node => {
-            this.operations.setFocus(node);
-        };
+        this.operations["onClickPlus"] = this.operations.addNodeLast;
     }
 
     // returns the branch node of the focused one

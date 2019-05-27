@@ -29,6 +29,7 @@ export class Node {
         this.id = global_id;
         global_id++;
         this.focused = false;
+        this.empty = false;
         this.nodeQuestion = "";
         this.nodeQuestionType = "text";
         this.prevYesNo = "yes";
@@ -79,6 +80,9 @@ export class Sequence {
         this.id = global_id;
         global_id++;
         this.list = [];
+    }
+    length() {
+        return this.list.length;
     }
     // adds node to this sequence by modifying it
     addNode(node) {
@@ -308,6 +312,7 @@ class HoriList extends React.Component {
                         sequ={x}
                         handlers={this.props.handlers}
                         popupContainer={this.props.popupContainer}
+                        insideChoice={true}
                     />
                 ))}
                 <style jsx>{`
@@ -349,6 +354,11 @@ class List extends React.Component {
                             this.props.sequ.id,
                             x
                         ])}
+                        isBranch={
+                            this.props.insideChoice &&
+                            this.props.sequ.length() === 1 &&
+                            x === this.props.sequ.getFirst()
+                        }
                         popupContainer={this.props.popupContainer}
                     />
                 );
@@ -363,8 +373,6 @@ class List extends React.Component {
                         .list-container {
                             display: flex;
                             flex-direction: column;
-                            position: relative;
-                            z-index: 1;
                         }
                     `}
                 </style>
@@ -426,6 +434,18 @@ class Square extends React.Component {
                     )
             ]
         ];
+        const branchItems = [
+            [
+                "",
+                "Markera som tom",
+                () =>
+                    runIfExists(
+                        this.props.handlers,
+                        "makeSquareEmpty",
+                        this.props.info
+                    )
+            ]
+        ];
         const normalItems = [
             [
                 "",
@@ -458,9 +478,14 @@ class Square extends React.Component {
 
         const height = 50;
         const width = 100;
-        const squareClasses = `square-${this.props.info.id}${
-            this.props.info.focused ? " focused" : ""
-        }`;
+        const circleR = 30;
+        let squareClasses = `square-${this.props.info.id}`;
+        if (this.props.info.focused) {
+            squareClasses += " focused";
+        }
+        if (this.props.info.empty) {
+            squareClasses += " empty";
+        }
         return (
             <div
                 className={`square ${squareClasses}`}
@@ -471,68 +496,76 @@ class Square extends React.Component {
                         this.props.info
                     )
                 }>
-                <div className="text">{this.props.info.nodeQuestion}</div>
-                <div
-                    className="dots-container"
-                    onClick={e => e.stopPropagation()}>
-                    <Popup
-                        trigger={<a className="dots">⠇</a>}
-                        position="right center"
-                        keepTooltipInside={this.props.popupContainer}
-                        contentStyle={{
-                            padding: "0px",
-                            border: "none",
-                            width: "250px"
-                        }}>
-                        {closefun => (
-                            <div>
-                                {createDivs(normalItems, closefun)}
-                                {this.props.preChoice &&
-                                    createDivs(preChoiceItems, closefun)}
-                                {!this.props.preChoice &&
-                                    createDivs(nonPreChoiceItems, closefun)}
-                                {this.props.preChoice && ( // TODO: remove this special case somehow. Maybe create a confirmation popup component that can be reused?
-                                    <Popup
-                                        trigger={
-                                            <div className="remove popup-item">
-                                                Ta Bort
-                                            </div>
-                                        }
-                                        onClose={closefun}
-                                        modal>
-                                        {closemodal => (
-                                            <div className="modal-main">
-                                                <div>
-                                                    Du kommer att ta bort mer än
-                                                    du antar!
+                {this.props.info.empty && <div className="darr">&darr;</div>}
+                {!this.props.info.empty && (
+                    <div className="text">{this.props.info.nodeQuestion}</div>
+                )}
+                {!this.props.info.empty && (
+                    <div
+                        className="dots-container"
+                        onClick={e => e.stopPropagation()}>
+                        <Popup
+                            trigger={<a className="dots">⠇</a>}
+                            position="right center"
+                            keepTooltipInside={this.props.popupContainer}
+                            contentStyle={{
+                                padding: "0px",
+                                border: "none",
+                                width: "250px"
+                            }}>
+                            {closefun => (
+                                <div>
+                                    {this.props.isBranch &&
+                                        createDivs(branchItems, closefun)}
+                                    {createDivs(normalItems, closefun)}
+                                    {this.props.preChoice &&
+                                        createDivs(preChoiceItems, closefun)}
+                                    {!this.props.preChoice &&
+                                        createDivs(nonPreChoiceItems, closefun)}
+                                    {this.props.preChoice && ( // TODO: remove this special case somehow. Maybe create a confirmation popup component that can be reused?
+                                        <Popup
+                                            trigger={
+                                                <div className="remove popup-item">
+                                                    Ta Bort
                                                 </div>
-                                                <div
-                                                    className="modal-abort"
-                                                    onClick={closemodal}>
-                                                    avbryt
+                                            }
+                                            onClose={closefun}
+                                            modal>
+                                            {closemodal => (
+                                                <div className="modal-main">
+                                                    <div>
+                                                        Du kommer att ta bort
+                                                        mer än du antar!
+                                                    </div>
+                                                    <div
+                                                        className="modal-abort"
+                                                        onClick={closemodal}>
+                                                        avbryt
+                                                    </div>
+                                                    <div
+                                                        className="modal-accept"
+                                                        onClick={() => {
+                                                            closemodal();
+                                                            runIfExists(
+                                                                this.props
+                                                                    .handlers,
+                                                                "deleteNode",
+                                                                this.props
+                                                                    .preChoice,
+                                                                this.props.info
+                                                            );
+                                                        }}>
+                                                        ta bort
+                                                    </div>
                                                 </div>
-                                                <div
-                                                    className="modal-accept"
-                                                    onClick={() => {
-                                                        closemodal();
-                                                        runIfExists(
-                                                            this.props.handlers,
-                                                            "deleteNode",
-                                                            this.props
-                                                                .preChoice,
-                                                            this.props.info
-                                                        );
-                                                    }}>
-                                                    ta bort
-                                                </div>
-                                            </div>
-                                        )}
-                                    </Popup>
-                                )}
-                            </div>
-                        )}
-                    </Popup>
-                </div>
+                                            )}
+                                        </Popup>
+                                    )}
+                                </div>
+                            )}
+                        </Popup>
+                    </div>
+                )}
                 {/* NOTE: popup-item classes don't work unless they are global for some reason */}
                 <style jsx>{`
                     .square {
@@ -542,7 +575,7 @@ class Square extends React.Component {
                         height: ${height}px;
                         margin: 10px;
                         position: relative;
-                        padding: 0.3em;
+                        padding: 5px;
                         padding-right: 0;
                         display: flex;
                         border-radius: 5px;
@@ -551,12 +584,30 @@ class Square extends React.Component {
                         background: #cb60b3;
                         background: linear-gradient(to bottom,#6085cb  0%,#1226ad 50%,#4656de 100%);
                     }
+                    .square.empty {
+                        width: ${circleR}px;
+                        height: ${circleR}px;
+                        border-radius: 50%;
+                        padding: 0;
+                        margin-top:    ${10 + (10 + height - circleR) / 2}px;
+                        margin-bottom: ${10 + (10 + height - circleR) / 2}px;
+                        margin-left:   ${10 + (5 + width - circleR) / 2}px;
+                        margin-right:  ${10 + (5 + width - circleR) / 2}px;
+                    }
+                    .darr {
+                       line-height: ${circleR}px;
+                       text-align: center;
+                       width: 100%;
+                    }
+                    .darr:hover {
+                       color: white;
+                       cursor: pointer;
+                    }
                     .dots-container {
                     }
                     .dots {
                         line-height: ${height}px;
                         user-select: none;
-                        z-index: 2;
                     }
                     .dots:hover {
                         cursor: pointer;
@@ -765,28 +816,34 @@ export default class Tree extends React.Component {
     render() {
         return (
             <div className="tree-root" ref={this.treeRootRef}>
-                {this.props.tree && (
-                    <List
-                        sequ={this.props.tree}
-                        handlers={this.props.handlers}
-                        popupContainer={this.props.popupContainer}
-                    />
-                )}
+                <div className="not-lines">
+                    {this.props.tree && (
+                        <List
+                            sequ={this.props.tree}
+                            handlers={this.props.handlers}
+                            popupContainer={this.props.popupContainer}
+                        />
+                    )}
+                    <div
+                        className="plus"
+                        onClick={() =>
+                            runIfExists(this.props.handlers, "onClickPlus")
+                        }>
+                        +
+                    </div>
+                </div>
                 {this.props.tree && (
                     <Lines
                         lines={this.props.tree.getLines()}
                         containerRef={this.treeRootRef}
                     />
                 )}
-                <div
-                    className="plus"
-                    onClick={() =>
-                        runIfExists(this.props.handlers, "onClickPlus")
-                    }>
-                    +
-                </div>
                 <style jsx>
                     {`
+                        .not-lines {
+                            position: relative;
+                            z-index: 1;
+                        }
                         .tree-root {
                             position: relative;
                             display: inline-block;
@@ -801,8 +858,6 @@ export default class Tree extends React.Component {
                             font-size: 25px;
                             margin-left: 10px;
                             user-select: none;
-                            position: relative;
-                            z-index: 1;
                         }
                         .plus:hover {
                             background: lime;
@@ -872,16 +927,21 @@ export const operations = {
             return add;
         }
     },
-    // changes the focus to the node current
-    setFocus: function(tree, current) {
+    // what happens if a node is clicked
+    squareClick: function(tree, current) {
         let prev = tree.find(x => x.focused);
-        if (prev !== null) {
+        if (prev !== null && prev !== current) {
             tree = tree.modifyNode(prev, {focused: false});
         }
         let path = idFind(tree, current.id);
-        return tree.modifyNode(path, {focused: true});
+        return tree.modifyNode(path, {focused: true, empty: false});
     },
     modifyNode: function(tree, path, mods) {
         return tree.modifyNode(path, mods);
+    },
+    // mark node as empty and make it lose focus
+    makeSquareEmpty(tree, node) {
+        let path = idFind(tree, node.id);
+        return tree.modifyNode(path, {focused: false, empty: true});
     }
 };
