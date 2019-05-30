@@ -1,8 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import Modal from "react-modal";
-import Link from "next/link";
-import Router from "next/router";
 
 const customStyles = {
     content: {
@@ -27,34 +24,50 @@ const style_no_button = {
     paddingLeft: "30%",
     float: "right"
 };
-/* A modal component is implemented using
 
-<AdminModal
-    modalName = string parameter connected to the display button of the modal
-    yesText = string parameter connected to yes condition
-    noText =  string parameter connected to no condition
-    textModal = string parameter connected what message the modal want to deliver
-    funcToYes= function to be run on yes, is implemented in calling file, example is {this.onYes}
-/>
+/* A confirmation modal component.
 
-No always closes the window no action taken.
+  This component wraps the whole page and is used like this:
+
+  <ConfirmationModal>
+    {openModal => <MainPage />}
+  </ConfirmationModal>
+
+  where `openModal` is a function on this class that opens this modal.
 
  */
-class AdminModal extends React.Component {
+export default class ConfirmationModal extends React.Component {
     constructor() {
         super();
 
         this.state = {
             modalIsOpen: false,
-            textMessage: "det här är en text som är bra"
+            textModal: "",
+            onYes: undefined,
+            yesText: "",
+            noText: ""
         };
 
         this.openModal = this.openModal.bind(this);
         this.closeModal = this.closeModal.bind(this);
     }
 
-    openModal() {
-        this.setState({modalIsOpen: true});
+    // this function opens the modal. `text` is the text to display,
+    // `onYes` is a function with no parameters that is run when the
+    // yes option is pressed and `options` is an object with various
+    // options.
+    openModal(text, onYes, options) {
+        const {yesText, noText} = Object.assign(
+            {yesText: "Ja", noText: "Nej"},
+            options
+        );
+        this.setState({
+            modalIsOpen: true,
+            textModal: text,
+            onYes,
+            yesText,
+            noText
+        });
     }
 
     closeModal() {
@@ -64,22 +77,24 @@ class AdminModal extends React.Component {
     render() {
         return (
             <div>
-                <button onClick={this.openModal}>{this.props.modalName}</button>
-
+                {this.props.children(this.openModal)}
                 <Modal
                     ariaHideApp={false}
                     isOpen={this.state.modalIsOpen}
                     onRequestClose={this.closeModal}
                     style={customStyles}>
                     <div>
-                        <div>{this.props.textModal}</div>
+                        <div>{this.state.textModal}</div>
 
                         <div style={style_yes_button}>
                             <a
                                 id="Yes"
                                 className="buttonStyle"
-                                onClick={() => this.props.funcToYes()}>
-                                {this.props.yesText}
+                                onClick={() => {
+                                    this.state.onYes && this.state.onYes();
+                                    this.closeModal();
+                                }}>
+                                {this.state.yesText}
                             </a>
                         </div>
                         <div style={style_no_button}>
@@ -87,13 +102,12 @@ class AdminModal extends React.Component {
                                 id="No"
                                 className="buttonStyle"
                                 onClick={this.closeModal}>
-                                {this.props.noText}
+                                {this.state.noText}
                             </button>
                         </div>
                     </div>
                     <style jsx>
                         {` .buttonStyle {
-
                                 background-color: #4CAF50;
                                 border: none;
                                 color: white;
@@ -121,5 +135,3 @@ class AdminModal extends React.Component {
         );
     }
 }
-
-export default AdminModal;

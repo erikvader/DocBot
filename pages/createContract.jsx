@@ -1,8 +1,16 @@
 import React, {Component} from "react";
 import Link from "next/link";
-import AdminModal from "../components/admin/modal";
+import ConfirmationModal from "../components/admin/modal";
 import Router from "next/router";
 import Tree, {operations} from "../components/admin/Tree";
+
+function AppModalWrapper() {
+    return (
+        <ConfirmationModal>
+            {openModal => <App openModal={openModal} />}
+        </ConfirmationModal>
+    );
+}
 
 // TODO: make the option fritext only be available if a question is
 //       NOT a branching question
@@ -215,13 +223,17 @@ class App extends Component {
         return (
             <div className="root">
                 <div className="menu">
-                    <AdminModal
-                        modalName="Tillbaka"
-                        yesText="Ja"
-                        noText="Nej"
-                        textModal="Är du säker på att du vill lämna den här vyn? Alla osparade ändringar kommer gå förlorade."
-                        funcToYes={this.onYes}
-                    />
+                    <div>
+                        <button
+                            onClick={() =>
+                                this.props.openModal(
+                                    "Är du säker på att du vill lämna den här vyn? Alla osparade ändringar kommer gå förlorade.",
+                                    this.onYes
+                                )
+                            }>
+                            Tillbaka
+                        </button>
+                    </div>
                     <input
                         className="upperLeftCorner"
                         name="contractName"
@@ -250,6 +262,7 @@ class App extends Component {
                             tree={this.state.tree}
                             handlers={this.operations}
                             popupContainer={".tree"}
+                            openModal={this.props.openModal}
                         />
                     </div>
                     <div>
@@ -339,4 +352,4 @@ class App extends Component {
     }
 }
 
-export default App;
+export default AppModalWrapper;
