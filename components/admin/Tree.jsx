@@ -782,6 +782,12 @@ export default class Tree extends React.Component {
     render() {
         return (
             <div className="tree-root" ref={this.treeRootRef}>
+                {this.props.tree && (
+                    <Lines
+                        lines={this.props.tree.getLines()}
+                        containerRef={this.treeRootRef}
+                    />
+                )}
                 <div className="not-lines">
                     {this.props.tree && (
                         <List
@@ -799,17 +805,10 @@ export default class Tree extends React.Component {
                         +
                     </div>
                 </div>
-                {this.props.tree && (
-                    <Lines
-                        lines={this.props.tree.getLines()}
-                        containerRef={this.treeRootRef}
-                    />
-                )}
                 <style jsx>
                     {`
                         .not-lines {
                             position: relative;
-                            z-index: 1;
                         }
                         .tree-root {
                             position: relative;
