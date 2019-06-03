@@ -313,6 +313,7 @@ class HoriList extends React.Component {
                         handlers={this.props.handlers}
                         popupContainer={this.props.popupContainer}
                         insideChoice={true}
+                        openModal={this.props.openModal}
                     />
                 ))}
                 <style jsx>{`
@@ -342,6 +343,7 @@ class List extends React.Component {
                         choice={x}
                         handlers={this.props.handlers}
                         popupContainer={this.props.popupContainer}
+                        openModal={this.props.openModal}
                     />
                 );
             } else {
@@ -360,6 +362,7 @@ class List extends React.Component {
                             x === this.props.sequ.getFirst()
                         }
                         popupContainer={this.props.popupContainer}
+                        openModal={this.props.openModal}
                     />
                 );
             }
@@ -403,6 +406,22 @@ class Square extends React.Component {
                         this.props.handlers,
                         "addNode",
                         this.props.preChoice
+                    )
+            ],
+            [
+                "remove",
+                "Ta Bort",
+                () =>
+                    this.props.openModal(
+                        "Detta kommer att ta bort frågans alla följdfrågor också, är du säker?",
+                        () =>
+                            runIfExists(
+                                this.props.handlers,
+                                "deleteNode",
+                                this.props.preChoice,
+                                this.props.info
+                            ),
+                        {noText: "Avbryt"}
                     )
             ]
         ];
@@ -522,45 +541,6 @@ class Square extends React.Component {
                                         createDivs(preChoiceItems, closefun)}
                                     {!this.props.preChoice &&
                                         createDivs(nonPreChoiceItems, closefun)}
-                                    {this.props.preChoice && ( // TODO: remove this special case somehow. Maybe create a confirmation popup component that can be reused?
-                                        <Popup
-                                            trigger={
-                                                <div className="remove popup-item">
-                                                    Ta Bort
-                                                </div>
-                                            }
-                                            onClose={closefun}
-                                            modal>
-                                            {closemodal => (
-                                                <div className="modal-main">
-                                                    <div>
-                                                        Du kommer att ta bort
-                                                        mer än du antar!
-                                                    </div>
-                                                    <div
-                                                        className="modal-abort"
-                                                        onClick={closemodal}>
-                                                        avbryt
-                                                    </div>
-                                                    <div
-                                                        className="modal-accept"
-                                                        onClick={() => {
-                                                            closemodal();
-                                                            runIfExists(
-                                                                this.props
-                                                                    .handlers,
-                                                                "deleteNode",
-                                                                this.props
-                                                                    .preChoice,
-                                                                this.props.info
-                                                            );
-                                                        }}>
-                                                        ta bort
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </Popup>
-                                    )}
                                 </div>
                             )}
                         </Popup>
@@ -569,8 +549,12 @@ class Square extends React.Component {
                 {/* NOTE: popup-item classes don't work unless they are global for some reason */}
                 <style jsx>{`
                     .square {
-                        background: rgb(241,252,255);
-                        background: linear-gradient(180deg, rgba(241,252,255,1) 0%, rgba(176,234,255,1) 100%);
+                        background: rgb(241, 252, 255);
+                        background: linear-gradient(
+                            180deg,
+                            rgba(241, 252, 255, 1) 0%,
+                            rgba(176, 234, 255, 1) 100%
+                        );
                         width: ${width}px;
                         height: ${height}px;
                         margin: 10px;
@@ -582,26 +566,31 @@ class Square extends React.Component {
                     }
                     .square.focused {
                         background: #cb60b3;
-                        background: linear-gradient(to bottom,#6085cb  0%,#1226ad 50%,#4656de 100%);
+                        background: linear-gradient(
+                            to bottom,
+                            #6085cb 0%,
+                            #1226ad 50%,
+                            #4656de 100%
+                        );
                     }
                     .square.empty {
                         width: ${circleR}px;
                         height: ${circleR}px;
                         border-radius: 50%;
                         padding: 0;
-                        margin-top:    ${10 + (10 + height - circleR) / 2}px;
+                        margin-top: ${10 + (10 + height - circleR) / 2}px;
                         margin-bottom: ${10 + (10 + height - circleR) / 2}px;
-                        margin-left:   ${10 + (5 + width - circleR) / 2}px;
-                        margin-right:  ${10 + (5 + width - circleR) / 2}px;
+                        margin-left: ${10 + (5 + width - circleR) / 2}px;
+                        margin-right: ${10 + (5 + width - circleR) / 2}px;
                     }
                     .darr {
-                       line-height: ${circleR}px;
-                       text-align: center;
-                       width: 100%;
+                        line-height: ${circleR}px;
+                        text-align: center;
+                        width: 100%;
                     }
                     .darr:hover {
-                       color: white;
-                       cursor: pointer;
+                        color: white;
+                        cursor: pointer;
                     }
                     .dots-container {
                     }
@@ -633,29 +622,6 @@ class Square extends React.Component {
                         color: red;
                         font-weight: bold;
                     }
-                    .modal-main {
-                       position: relative;
-                       padding-bottom: 30px;
-                       text-align: center;
-                    }
-                    .modal-abort {
-                       position: absolute;
-                       left: 0;
-                       bottom: 0;
-                       padding 0.3em;
-                    }
-                    .modal-accept {
-                       position: absolute;
-                       bottom: 0;
-                       right: 0;
-                       background: red;
-                       padding 0.3em;
-                    }
-                    .modal-accept:hover, .modal-abort:hover {
-                       cursor: pointer;
-                       background: gainsboro;
-                    }
-
                 `}</style>
             </div>
         );
@@ -816,12 +782,19 @@ export default class Tree extends React.Component {
     render() {
         return (
             <div className="tree-root" ref={this.treeRootRef}>
+                {this.props.tree && (
+                    <Lines
+                        lines={this.props.tree.getLines()}
+                        containerRef={this.treeRootRef}
+                    />
+                )}
                 <div className="not-lines">
                     {this.props.tree && (
                         <List
                             sequ={this.props.tree}
                             handlers={this.props.handlers}
                             popupContainer={this.props.popupContainer}
+                            openModal={this.props.openModal}
                         />
                     )}
                     <div
@@ -832,17 +805,10 @@ export default class Tree extends React.Component {
                         +
                     </div>
                 </div>
-                {this.props.tree && (
-                    <Lines
-                        lines={this.props.tree.getLines()}
-                        containerRef={this.treeRootRef}
-                    />
-                )}
                 <style jsx>
                     {`
                         .not-lines {
                             position: relative;
-                            z-index: 1;
                         }
                         .tree-root {
                             position: relative;
