@@ -236,11 +236,13 @@ class App extends Component {
                     <br />
 
                     <div style={{margin: "auto", paddingBottom: "0"}}>
+                        <a> Avsikt: </a>
                         <select style={{marginRight: "100px"}} name="Avsikt">
                             <option value="movetogether">Flytta ihop</option>
                             <option value="cohabitant">Inneboende</option>
                             <option value="sellcontact">Köpeavtal</option>
                         </select>
+                        <a> Entitet: </a>
                         <select name="Entitet">
                             <option value="partner">Partner</option>
                             <option value="cohabitant">Inneboende</option>
